@@ -1,31 +1,122 @@
 <script setup lang="ts">
-// This starter template is using Vue 3 <script setup> SFCs
-// Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
-import HelloWorld from "./components/HelloWorld.vue";
+import { Swiper, SwiperSlide } from "swiper/vue";
+
+// Import Swiper styles
+import "swiper/css";
+
+const onSwiper = (swiper) => {
+  console.log(swiper);
+};
+const onSlideChange = () => {
+  console.log("slide change");
+};
 </script>
 
 <template>
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+  <div class="swiper-container">
+    <div class="swiper-wrapper">
+      <swiper
+        :slides-per-view="3"
+        :space-between="40"
+        @swiper="onSwiper"
+        @slideChange="onSlideChange"
+        direction="vertical"
+      >
+        <swiper-slide>
+          <div class="container-general">
+            <div class="gallery-wrap wrap-effect-1">
+              <div class="item"></div>
+              <div class="item"></div>
+              <div class="item"></div>
+              <div class="item"></div>
+            </div>
+          </div>
+        </swiper-slide>
+      </swiper>
+    </div>
   </div>
-  <HelloWorld msg="Vite + Vue" />
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
+<style lang="scss">
+@import url("https://fonts.googleapis.com/css?family=Roboto+Slab");
+
+html,
+body {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+
+body {
+  font-family: "Roboto Slab", serif;
+  color: #000;
+  margin: 0;
+  padding: 0;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+
+.heading {
+  background: white;
+  height: 5%;
+  margin: 10px;
+  padding: 10px;
+}
+
+.swiper-container {
+  width: 100%;
+  height: 90%;
+}
+.swiper-slide {
+  text-align: center;
+  background: #fff;
+  /* Center slide text vertically */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+// Image Accordions General
+.container-general {
+  padding: 75px 0;
+  margin: 0 auto;
+  width: 800px;
+  .gallery-wrap {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 70vh;
+    .item {
+      flex: 1;
+      height: 100%;
+      background-position: center;
+      background-size: cover;
+      background-repeat: none;
+      transition: all 0.8s ease;
+      &:hover {
+        flex: 7;
+      }
+    }
+  }
+}
+
+// Image Accordions Effect 1
+.wrap-effect-1 {
+  .item {
+    &:first-of-type {
+      // './assets/zgdrone.png'
+      background-image: url("https://cdn.dribbble.com/users/729829/screenshots/4185141/galshir-cactus-coffee.png");
+    }
+    &:nth-of-type(2) {
+      background-image: url("https://cdn.dribbble.com/users/729829/screenshots/6146136/galshir-tea-biscuit_2x.png");
+    }
+    &:nth-of-type(3) {
+      background-image: url("https://cdn.dribbble.com/users/729829/screenshots/4473482/galshir-dog-walker.gif");
+    }
+    &:nth-of-type(4) {
+      background-image: url("https://cdn.dribbble.com/users/729829/screenshots/5743606/gal-shir-scooter_2x.png");
+    }
+    &:last-of-type {
+      background-image: url("https://cdn.dribbble.com/users/729829/screenshots/4738104/galshir-storytime.png");
+    }
+  }
 }
 </style>
