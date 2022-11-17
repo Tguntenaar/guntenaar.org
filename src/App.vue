@@ -13,6 +13,8 @@ const onSlideChange = () => {
 </script>
 
 <template>
+  <div class="title">Guntenaar.org</div>
+  <div class="subtitle">which Guntenaar are you looking for?</div>
   <div class="swiper-container">
     <div class="swiper-wrapper">
       <swiper
@@ -40,6 +42,20 @@ const onSlideChange = () => {
 <style lang="scss">
 @import url("https://fonts.googleapis.com/css?family=Roboto+Slab");
 
+.title {
+  font-family: "Roboto Slab", serif;
+  color: white;
+  font-size: 3rem;
+  margin: 20px;
+}
+
+.subtitle {
+  font-family: "Roboto Slab", serif;
+  color: white;
+  font-size: 1rem;
+  margin: 20px;
+}
+
 html,
 body {
   position: relative;
@@ -52,13 +68,6 @@ body {
   color: #000;
   margin: 0;
   padding: 0;
-}
-
-.heading {
-  background: white;
-  height: 5%;
-  margin: 10px;
-  padding: 10px;
 }
 
 .swiper-container {
@@ -79,11 +88,13 @@ body {
   padding: 75px 0;
   margin: 0 auto;
   width: 800px;
+  border-radius: 20px;
+
   .gallery-wrap {
     display: flex;
     flex-direction: row;
     width: 100%;
-    height: 70vh;
+    height: 90vh;
     .item {
       flex: 1;
       height: 100%;
@@ -103,19 +114,28 @@ body {
   .item {
     &:first-of-type {
       // './assets/zgdrone.png'
-      background-image: url("https://cdn.dribbble.com/users/729829/screenshots/4185141/galshir-cactus-coffee.png");
+      // background-image: url("https://cdn.dribbble.com/users/729829/screenshots/4185141/galshir-cactus-coffee.png");
+      background-image: url("assets/boris.jpeg");
     }
     &:nth-of-type(2) {
-      background-image: url("https://cdn.dribbble.com/users/729829/screenshots/6146136/galshir-tea-biscuit_2x.png");
+      background-image: url("assets/joost.jpeg");
+
+      // background-image: url("https://cdn.dribbble.com/users/729829/screenshots/6146136/galshir-tea-biscuit_2x.png");
     }
     &:nth-of-type(3) {
-      background-image: url("https://cdn.dribbble.com/users/729829/screenshots/4473482/galshir-dog-walker.gif");
+      background-image: url("assets/thomas.jpeg");
+
+      // background-image: url("https://cdn.dribbble.com/users/729829/screenshots/4473482/galshir-dog-walker.gif");
     }
     &:nth-of-type(4) {
-      background-image: url("https://cdn.dribbble.com/users/729829/screenshots/5743606/gal-shir-scooter_2x.png");
+      background-image: url("assets/olivier.jpeg");
+
+      // background-image: url("https://cdn.dribbble.com/users/729829/screenshots/5743606/gal-shir-scooter_2x.png");
     }
     &:last-of-type {
-      background-image: url("https://cdn.dribbble.com/users/729829/screenshots/4738104/galshir-storytime.png");
+      background-image: url("assets/olivier.jpeg");
+
+      // background-image: url("https://cdn.dribbble.com/users/729829/screenshots/4738104/galshir-storytime.png");
     }
   }
 }
