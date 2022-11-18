@@ -4,8 +4,8 @@ import { Swiper, SwiperSlide } from "swiper/vue";
 // Import Swiper styles
 import "swiper/css";
 
-const onSwiper = (swiper) => {
-  console.log(swiper);
+const onSwiper = () => {
+  // console.log(swiper);
 };
 const onSlideChange = () => {
   console.log("slide change");
@@ -43,14 +43,12 @@ const onSlideChange = () => {
 @import url("https://fonts.googleapis.com/css?family=Roboto+Slab");
 
 .title {
-  font-family: "Roboto Slab", serif;
   color: white;
   font-size: 3rem;
   margin: 20px;
 }
 
 .subtitle {
-  font-family: "Roboto Slab", serif;
   color: white;
   font-size: 1rem;
   margin: 20px;
