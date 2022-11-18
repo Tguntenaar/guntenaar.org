@@ -19,10 +19,18 @@ const name = ref("Thomas");
     <div class="swiper-wrapper">
       <div class="container-general">
         <div class="gallery-wrap wrap-effect-1">
-          <div class="item"></div>
-          <div class="item"></div>
-          <div class="item"></div>
-          <div class="item"></div>
+          <div class="item">
+            <div class="description">joost.guntenaar.org</div>
+          </div>
+          <div class="item">
+            <div class="description">flexinhouse.nl <br />zgdrone.com</div>
+          </div>
+          <div class="item">
+            <div class="description">geforcy.com <br />thomasguntenaar.com</div>
+          </div>
+          <div class="item">
+            <div class="description">olivierguntenaar.com</div>
+          </div>
         </div>
       </div>
     </div>
@@ -101,13 +109,31 @@ body {
       background-repeat: none;
 
       transition: all 0.8s ease;
+      position: relative;
+
+      .description {
+        color: white;
+        margin: 20px;
+        bottom: 20px;
+        left: 20px;
+        position: absolute;
+        opacity: 0;
+        text-align: left;
+        -webkit-transition: opacity 0.5s ease-in-out;
+        -moz-transition: opacity 0.5s ease-in-out;
+        transition: opacity 0.9s ease-in-out;
+      }
       &:hover {
         flex: 7;
+        .description {
+          opacity: 1;
+        }
       }
     }
   }
 }
 
+$border-rad: 20px;
 // Image Accordions Effect 1
 .wrap-effect-1 {
   .item {
@@ -115,8 +141,8 @@ body {
       // './assets/zgdrone.png'
       // background-image: url("https://cdn.dribbble.com/users/729829/screenshots/4185141/galshir-cactus-coffee.png");
       background-image: url("assets/joost.jpeg");
-      border-top-left-radius: 20px;
-      border-bottom-left-radius: 20px;
+      border-top-left-radius: $border-rad;
+      border-bottom-left-radius: $border-rad;
     }
     &:nth-of-type(2) {
       background-image: url("assets/boris.jpeg");
@@ -130,8 +156,8 @@ body {
     }
     &:nth-of-type(4) {
       background-image: url("assets/olivier.jpeg");
-      border-top-right-radius: 20px;
-      border-bottom-right-radius: 20px;
+      border-top-right-radius: $border-rad;
+      border-bottom-right-radius: $border-rad;
       // background-image: url("https://cdn.dribbble.com/users/729829/screenshots/5743606/gal-shir-scooter_2x.png");
     }
   }

@@ -29,5 +29,5 @@ jobs:
           args: -d
         env:
           GCP_SERVICE_ACCOUNT_KEY_FILE: ${{ secrets.GOOGLE_CREDENTIALS }}
-          GCP_STORAGE_BUCKET: geforcy.com
+          GCP_STORAGE_BUCKET: ${{ secrets.GCP_STORAGE_BUCKET }}
           SOURCE_DIR: ./dist
