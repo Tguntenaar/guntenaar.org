@@ -1,9 +1,4 @@
 <script setup lang="ts">
-import { Swiper, SwiperSlide } from "swiper/vue";
-
-// Import Swiper styles
-import "swiper/css";
-
 const onSwiper = () => {
   // console.log(swiper);
 };
@@ -17,24 +12,14 @@ const onSlideChange = () => {
   <div class="subtitle">which Guntenaar are you looking for?</div>
   <div class="swiper-container">
     <div class="swiper-wrapper">
-      <swiper
-        :slides-per-view="3"
-        :space-between="40"
-        @swiper="onSwiper"
-        @slideChange="onSlideChange"
-        direction="vertical"
-      >
-        <swiper-slide>
-          <div class="container-general">
-            <div class="gallery-wrap wrap-effect-1">
-              <div class="item"></div>
-              <div class="item"></div>
-              <div class="item"></div>
-              <div class="item"></div>
-            </div>
-          </div>
-        </swiper-slide>
-      </swiper>
+      <div class="container-general">
+        <div class="gallery-wrap wrap-effect-1">
+          <div class="item"></div>
+          <div class="item"></div>
+          <div class="item"></div>
+          <div class="item"></div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -85,20 +70,21 @@ body {
 .container-general {
   padding: 75px 0;
   margin: 0 auto;
-  width: 800px;
-  border-radius: 20px;
-
+  width: 1000px;
   .gallery-wrap {
     display: flex;
     flex-direction: row;
     width: 100%;
     height: 90vh;
+    border-radius: 20px; //FIXME:
+
     .item {
       flex: 1;
       height: 100%;
       background-position: center;
       background-size: cover;
       background-repeat: none;
+
       transition: all 0.8s ease;
       &:hover {
         flex: 7;
@@ -114,6 +100,8 @@ body {
       // './assets/zgdrone.png'
       // background-image: url("https://cdn.dribbble.com/users/729829/screenshots/4185141/galshir-cactus-coffee.png");
       background-image: url("assets/boris.jpeg");
+      border-top-left-radius: 20px;
+      border-bottom-left-radius: 20px;
     }
     &:nth-of-type(2) {
       background-image: url("assets/joost.jpeg");
@@ -127,13 +115,9 @@ body {
     }
     &:nth-of-type(4) {
       background-image: url("assets/olivier.jpeg");
-
+      border-top-right-radius: 20px;
+      border-bottom-right-radius: 20px;
       // background-image: url("https://cdn.dribbble.com/users/729829/screenshots/5743606/gal-shir-scooter_2x.png");
-    }
-    &:last-of-type {
-      background-image: url("assets/olivier.jpeg");
-
-      // background-image: url("https://cdn.dribbble.com/users/729829/screenshots/4738104/galshir-storytime.png");
     }
   }
 }
