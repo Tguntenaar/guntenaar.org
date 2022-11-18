@@ -1,15 +1,20 @@
 <script setup lang="ts">
+import { ref } from "vue";
 const onSwiper = () => {
   // console.log(swiper);
 };
 const onSlideChange = () => {
   console.log("slide change");
 };
+const name = ref("Thomas");
 </script>
 
 <template>
   <div class="title">Guntenaar.org</div>
   <div class="subtitle">which Guntenaar are you looking for?</div>
+  <div class="overlay">
+    <div class="name">{{ name }}</div>
+  </div>
   <div class="swiper-container">
     <div class="swiper-wrapper">
       <div class="container-general">
@@ -57,25 +62,35 @@ body {
   width: 100%;
   height: 90%;
 }
-.swiper-slide {
-  text-align: center;
-  background: #fff;
-  /* Center slide text vertically */
-  display: flex;
-  justify-content: center;
-  align-items: center;
+
+.overlay {
+  width: 100%;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  visibility: hidden; // FIXME:
+  // transition-timing-function: ease-in;
+  .name {
+    color: white;
+    font-size: 3rem;
+    margin-top: 750px;
+    // margin: 20px;
+  }
 }
 
 // Image Accordions General
 .container-general {
-  padding: 75px 0;
   margin: 0 auto;
   width: 1000px;
   .gallery-wrap {
     display: flex;
     flex-direction: row;
     width: 100%;
-    height: 90vh;
+    height: 80vh;
     border-radius: 20px; //FIXME:
 
     .item {
@@ -99,12 +114,12 @@ body {
     &:first-of-type {
       // './assets/zgdrone.png'
       // background-image: url("https://cdn.dribbble.com/users/729829/screenshots/4185141/galshir-cactus-coffee.png");
-      background-image: url("assets/boris.jpeg");
+      background-image: url("assets/joost.jpeg");
       border-top-left-radius: 20px;
       border-bottom-left-radius: 20px;
     }
     &:nth-of-type(2) {
-      background-image: url("assets/joost.jpeg");
+      background-image: url("assets/boris.jpeg");
 
       // background-image: url("https://cdn.dribbble.com/users/729829/screenshots/6146136/galshir-tea-biscuit_2x.png");
     }
