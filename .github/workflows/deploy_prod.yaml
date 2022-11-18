@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./bithotel
+        working-directory: .
     steps:
       - name: 🚚 Get latest code
         uses: actions/checkout@v2
@@ -20,8 +20,7 @@ jobs:
         with:
           node-version: 16
       - name: install node modules
-      - run: yarn
-
+        run: yarn
 
       - run: yarn build
       - name: Sync
