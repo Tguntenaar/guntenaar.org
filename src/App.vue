@@ -11,25 +11,31 @@ const name = ref("Thomas");
 
 <template>
   <div class="title">Guntenaar.org</div>
-  <div class="subtitle">which Guntenaar are you looking for?</div>
+  <div class="subtitle">Which Guntenaar are you looking for?</div>
   <div class="overlay">
     <div class="name">{{ name }}</div>
   </div>
-  <div class="swiper-container">
+  <div class="swiper-container cursor-pointer">
     <div class="swiper-wrapper">
       <div class="container-general">
         <div class="gallery-wrap wrap-effect-1">
           <div class="item">
             <div class="description">joost.guntenaar.org</div>
+            <div class="description discipline">Photography</div>
           </div>
           <div class="item">
             <div class="description">flexinhouse.nl <br />zgdrone.com</div>
+            <div class="description discipline">
+              Accounting <br />Drones Industries
+            </div>
           </div>
           <div class="item">
             <div class="description">geforcy.com <br />thomasguntenaar.com</div>
+            <div class="description discipline">Software Engineer</div>
           </div>
           <div class="item">
             <div class="description">olivierguntenaar.com</div>
+            <div class="description discipline">Software Engineer</div>
           </div>
         </div>
       </div>
@@ -123,6 +129,13 @@ body {
         -moz-transition: opacity 0.5s ease-in-out;
         transition: opacity 0.9s ease-in-out;
       }
+
+      .discipline {
+        text-align: right;
+        left: inherit;
+        right: 20px;
+      }
+
       &:hover {
         flex: 7;
         .description {
