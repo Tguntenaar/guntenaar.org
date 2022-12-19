@@ -10,32 +10,35 @@ const name = ref("Thomas");
 </script>
 
 <template>
-  <div class="title">Guntenaar.org</div>
-  <div class="subtitle">Which Guntenaar are you looking for?</div>
-  <div class="overlay">
-    <div class="name">{{ name }}</div>
-  </div>
-  <div class="swiper-container cursor-pointer">
+  <div class="svg-curves"></div>
+  <div class="text-white text-5xl m-5">Guntenaar.org</div>
+  <div class="w-full h-full cursor-pointer m-10">
     <div class="swiper-wrapper">
-      <div class="container-general">
-        <div class="gallery-wrap wrap-effect-1">
+      <div class="mx-auto my-0 container-general">
+        <div
+          class="gallery-wrap w-full flex flex-wrap rounded-2xl wrap-effect-1"
+        >
           <div class="item">
-            <div class="description">joost.guntenaar.org</div>
-            <div class="description discipline">Photography</div>
+            <div class="m-5 description">
+              joost.guntenaar.org <br />joostguntenaar.com
+            </div>
+            <div class="m-5 description discipline">Photography</div>
           </div>
           <div class="item">
-            <div class="description">flexinhouse.nl <br />zgdrone.com</div>
-            <div class="description discipline">
+            <div class="m-5 description">flexinhouse.nl <br />zgdrone.com</div>
+            <div class="m-5 description discipline">
               Accounting <br />Drones Industries
             </div>
           </div>
           <div class="item">
-            <div class="description">geforcy.com <br />thomasguntenaar.com</div>
-            <div class="description discipline">Software Engineer</div>
+            <div class="m-5 description">
+              geforcy.com <br />thomasguntenaar.com
+            </div>
+            <div class="m-5 description discipline">Software Engineer</div>
           </div>
           <div class="item">
-            <div class="description">olivierguntenaar.com</div>
-            <div class="description discipline">Software Engineer</div>
+            <div class="m-5 description">olivierguntenaar.com</div>
+            <div class="m-5 description discipline">Software Engineer</div>
           </div>
         </div>
       </div>
@@ -45,18 +48,6 @@ const name = ref("Thomas");
 
 <style lang="scss">
 @import url("https://fonts.googleapis.com/css?family=Roboto+Slab");
-
-.title {
-  color: white;
-  font-size: 3rem;
-  margin: 20px;
-}
-
-.subtitle {
-  color: white;
-  font-size: 1rem;
-  margin: 20px;
-}
 
 html,
 body {
@@ -72,40 +63,22 @@ body {
   padding: 0;
 }
 
-.swiper-container {
+body {
   width: 100%;
-  height: 90%;
-}
-
-.overlay {
-  width: 100%;
-  pointer-events: none;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  background: url("./assets/layered-peaks-haikei.svg");
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: cover;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  visibility: hidden; // FIXME:
-  // transition-timing-function: ease-in;
-  .name {
-    color: white;
-    font-size: 3rem;
-    margin-top: 750px;
-    // margin: 20px;
-  }
+  overflow-y: hidden;
 }
 
 // Image Accordions General
 .container-general {
-  margin: 0 auto;
-  width: 1000px;
+  // visibility: hidden;
+  width: 1400px;
   .gallery-wrap {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
     height: 80vh;
-    border-radius: 20px; //FIXME:
 
     .item {
       flex: 1;
@@ -119,7 +92,6 @@ body {
 
       .description {
         color: white;
-        margin: 20px;
         bottom: 20px;
         left: 20px;
         position: absolute;
@@ -137,7 +109,7 @@ body {
       }
 
       &:hover {
-        flex: 7;
+        flex: 5;
         .description {
           opacity: 1;
         }
