@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref } from "vue";
-const onSwiper = () => {
-  // console.log(swiper);
-};
-const onSlideChange = () => {
-  console.log("slide change");
-};
-const name = ref("Thomas");
+// import { ref } from "vue";
+// const onSwiper = () => {
+//   // console.log(swiper);
+// };
+// const onSlideChange = () => {
+//   console.log("slide change");
+// };
+// const name = ref("Thomas");
 </script>
 
 <template>
