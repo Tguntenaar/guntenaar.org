@@ -1,0 +1,10 @@
+# Cloudflare Pages header rules.
+
+# Portrait filenames are stable, so a week of caching is safe and saves the
+# repeat visitor ~55 KB. Not `immutable` — replacing a photo keeps its name.
+/portraits/*
+  Cache-Control: public, max-age=604800
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

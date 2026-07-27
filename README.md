@@ -1,19 +1,52 @@
-# Guntenaar.org
+# guntenaar.org
 
-## Vue 3 + TypeScript + Vite
+A family index: four Guntenaars and where to find each of them.
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## What this is
 
-## Recommended IDE Setup
+A single static page. No framework, no build step — `public/` is the site.
+It was a Vue + Vite + Tailwind app; for four names and six links that was more
+machinery than content, so it is plain HTML and CSS now.
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+```
+public/
+  index.html      the page
+  404.html        not-found, same design
+  style.css       all of it
+  _headers        Cloudflare Pages caching + security headers
+  favicon.svg
+  portraits/      face-cropped 400x400 WebP, ~14 KB each
+originals/        the full-resolution source photos — keep these
+```
 
-## Type Support For `.vue` Imports in TS
+## Working on it
 
-Since TypeScript cannot handle type information for `.vue` imports, they are shimmed to be a generic Vue component type by default. In most cases this is fine if you don't really care about component prop types outside of templates. However, if you wish to get actual prop types in `.vue` imports (for example to get props validation when using manual `h(...)` calls), you can enable Volar's Take Over mode by following these steps:
+There is nothing to install.
 
-1. Run `Extensions: Show Built-in Extensions` from VS Code's command palette, look for `TypeScript and JavaScript Language Features`, then right click and select `Disable (Workspace)`. By default, Take Over mode will enable itself if the default TypeScript extension is disabled.
-2. Reload the VS Code window by running `Developer: Reload Window` from the command palette.
+```sh
+cd public && python3 -m http.server 8765
+```
 
-You can learn more about Take Over mode [here](https://github.com/johnsoncodehk/volar/discussions/471).
+### Portraits
 
+`public/portraits/*.webp` are generated from `originals/*.jpeg` — face-centred
+square crops, resized to 400 px and encoded as WebP. The originals are 1 MB+
+phone photos and the page renders them at 68 px, so they are not shipped
+directly. To reframe one, adjust its `focus` (face centre, as a fraction of
+width and height) and `zoom` (square side, as a fraction of the shorter edge)
+in `tools/crop_portraits.py` and re-run it.
+
+## Hosting
+
+Cloudflare Pages, deployed from this repo via Cloudflare's Git integration —
+no GitHub Actions workflow and no deploy secrets.
+
+| Setting          | Value    |
+| ---------------- | -------- |
+| Build command    | *(none)* |
+| Output directory | `public` |
+
+Note that the `guntenaar.org` apex currently serves Joost's photography site
+from a separate host (nginx at dds.nl), and the domain's nameservers are not
+Cloudflare's. Pointing the apex here is a deliberate DNS change, not something
+that follows from deploying.

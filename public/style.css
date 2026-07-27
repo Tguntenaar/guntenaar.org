@@ -1,0 +1,314 @@
+/* ==========================================================================
+   guntenaar.org — a family index
+
+   The site has exactly one job: send a visitor to the right Guntenaar. So the
+   name is the hero of each row and the portrait is a small identifier beside
+   it, not a headline image.
+
+   Two typefaces, each doing one job. Archivo — a grotesque with enough weight
+   to carry the names — and IBM Plex Mono for the domains, because a domain is
+   a literal address and monospace makes it read as one.
+
+   The accent is Delft blue. It is the one colour on the page, and it only
+   appears where something is interactive.
+   ========================================================================== */
+
+:root {
+    --paper: #ffffff;
+    --ink:   #14181f;
+    --muted: #767e8b;
+    --line:  #e7e9ef;
+    --delft: #1e3f8f;
+    --wash:  #f4f6fb;
+
+    --radius: 20px;
+    --ease:   cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Archivo', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+.page {
+    width: 100%;
+    max-width: 47rem;
+    margin: 0 auto;
+    padding: clamp(2.5rem, 9vw, 5.5rem) clamp(1.25rem, 5vw, 2rem) clamp(3rem, 10vw, 6rem);
+}
+
+/* --------------------------------------------------------------------------
+   Masthead
+   -------------------------------------------------------------------------- */
+
+.masthead {
+    margin-bottom: clamp(2.25rem, 6vw, 3.25rem);
+}
+
+.eyebrow {
+    margin: 0 0 1.15rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    color: var(--delft);
+}
+
+.masthead h1 {
+    margin: 0;
+    font-size: clamp(2.1rem, 8.5vw, 3.35rem);
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+}
+
+.lede {
+    margin: 1rem 0 0;
+    max-width: 33ch;
+    font-size: clamp(0.98rem, 2.6vw, 1.06rem);
+    line-height: 1.5;
+    color: var(--muted);
+}
+
+/* --------------------------------------------------------------------------
+   Roster
+   -------------------------------------------------------------------------- */
+
+.roster {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.person {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding: 1.2rem 1.15rem 1.3rem;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    transition:
+        transform   0.35s var(--ease),
+        border-color 0.35s var(--ease),
+        box-shadow  0.35s var(--ease);
+}
+
+.who {
+    display: flex;
+    align-items: center;
+    gap: 0.95rem;
+}
+
+.portrait {
+    flex: none;
+    width: 3.75rem;
+    height: 3.75rem;
+    border-radius: 15px;
+    object-fit: cover;
+    /* Held back at rest so the page stays calm and the names lead; the colour
+       comes up on hover as part of the same gesture that draws the route. */
+    filter: saturate(0.6);
+    transition:
+        filter    0.4s var(--ease),
+        transform 0.4s var(--ease);
+}
+
+.ident {
+    min-width: 0;
+}
+
+.name {
+    margin: 0;
+    font-size: clamp(1.3rem, 4.6vw, 1.5rem);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+}
+
+.craft {
+    margin: 0.2rem 0 0;
+    font-size: 0.88rem;
+    line-height: 1.3;
+    color: var(--muted);
+}
+
+/* --------------------------------------------------------------------------
+   Destinations
+
+   The signature: hovering a destination draws a line from the name across to
+   the arrow. The site is a router, so the interaction traces the route.
+   -------------------------------------------------------------------------- */
+
+.dests {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.dest {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    /* Tall enough to be a comfortable thumb target; most visitors are on a
+       phone, where this row is the only thing they need to hit. */
+    min-height: 2.75rem;
+    padding: 0 0.15rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.83rem;
+    color: var(--muted);
+    text-decoration: none;
+    border-radius: 9px;
+    transition: color 0.3s var(--ease), background-color 0.3s var(--ease);
+}
+
+.dest-label {
+    flex: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* The track is always there as a hairline; the blue is what gets drawn. */
+.route {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 1rem;
+    height: 1px;
+    background: var(--line);
+}
+
+.route::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--delft);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.55s var(--ease);
+}
+
+.arrow {
+    flex: none;
+    font-size: 0.95rem;
+    line-height: 1;
+    transition: transform 0.4s var(--ease), color 0.3s var(--ease);
+}
+
+.dest:focus-visible {
+    outline: 2px solid var(--delft);
+    outline-offset: 3px;
+    color: var(--delft);
+}
+
+.dest:focus-visible .route::after {
+    transform: scaleX(1);
+}
+
+/* --------------------------------------------------------------------------
+   Desktop: the row opens out, and hover comes alive
+   -------------------------------------------------------------------------- */
+
+@media (min-width: 44rem) {
+    .person {
+        flex-direction: row;
+        align-items: center;
+        gap: 2.25rem;
+        padding: 1.35rem 1.6rem;
+    }
+
+    .who {
+        flex: 0 0 14.5rem;
+    }
+
+    .dests {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .portrait {
+        width: 4.25rem;
+        height: 4.25rem;
+        border-radius: 17px;
+    }
+}
+
+/* Everything below is an enhancement for pointer devices. Touch users get the
+   full-colour portraits and the plain rows, which is the right resting state
+   for them anyway — there is no hover to discover. */
+@media (hover: hover) and (pointer: fine) {
+    .person:hover {
+        transform: translateY(-2px);
+        border-color: #ccd5ea;
+        box-shadow: 0 14px 34px -16px rgba(30, 63, 143, 0.3);
+    }
+
+    .person:hover .portrait {
+        filter: saturate(1);
+        transform: scale(1.05);
+    }
+
+    .dest:hover {
+        color: var(--delft);
+        background-color: var(--wash);
+    }
+
+    .dest:hover .route::after {
+        transform: scaleX(1);
+    }
+
+    .dest:hover .arrow {
+        color: var(--delft);
+        transform: translateX(3px);
+    }
+}
+
+@media (hover: none) {
+    .portrait {
+        filter: none;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Arrival
+
+   One quiet orchestrated moment: the masthead settles, then the rows follow in
+   sequence. Four rows is few enough that a stagger reads as composure rather
+   than as a queue waiting to load.
+   -------------------------------------------------------------------------- */
+
+@keyframes rise {
+    from { opacity: 0; transform: translateY(0.6rem); }
+    to   { opacity: 1; transform: none; }
+}
+
+.masthead,
+.person {
+    animation: rise 0.7s var(--ease) both;
+}
+
+.person:nth-child(1) { animation-delay: 0.10s; }
+.person:nth-child(2) { animation-delay: 0.17s; }
+.person:nth-child(3) { animation-delay: 0.24s; }
+.person:nth-child(4) { animation-delay: 0.31s; }
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition-duration: 0.01ms !important;
+    }
+}
