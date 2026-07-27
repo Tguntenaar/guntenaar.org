@@ -33,7 +33,11 @@ PEOPLE = {
     "boris":   {"file": "boris.jpeg",  "focus": (0.520, 0.320), "zoom": 0.63},
 
     "thomas":  {"file": "thomas.jpeg", "focus": (0.508, 0.381), "zoom": 1.00},
-    "olivier": {"file": "olivier.jpeg", "focus": (0.514, 0.398), "zoom": 1.00},
+
+    # A full-figure studio frame shot from above. At 68 px the whole pose would
+    # read as a smudge, so the crop comes right down onto his face to keep the
+    # row consistent with the other three.
+    "olivier": {"file": "olivier.jpeg", "focus": (0.473, 0.335), "zoom": 0.50},
 }
 
 
