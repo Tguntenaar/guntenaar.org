@@ -133,6 +133,14 @@
 </head>
 <body>
 
+<!-- The painting, on its own fixed layer under everything: a still CSS
+     background, the same frame on a canvas with the canal moving, and the
+     eggshell veil over both. See water.js. -->
+<div class="backdrop" aria-hidden="true">
+    <canvas class="backdrop-water" id="water"></canvas>
+    <div class="backdrop-veil"></div>
+</div>
+
 <div class="page">
 
     <header class="masthead">
@@ -239,8 +247,15 @@
 
     </ul>
 
+    <div class="plumb" aria-hidden="true"></div>
+
 </div>
 
+<!-- Scroll room past the roster. Zero height until water.js says the canvas
+     works, so a browser without WebGL never gets an empty screenful. -->
+<div class="tail" aria-hidden="true"></div>
+
+<script type="module" src="water.js"></script>
 <script type="module" src="secret.js"></script>
 
 </body>

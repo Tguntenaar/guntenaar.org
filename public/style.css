@@ -25,6 +25,16 @@
     --paper: #ffffff;
     --ink:   #14181f;
     --muted: #6f7681;
+
+    /* The domains and the captions under the names are the quietest text on
+       the page and also the only part of it that does anything. The painting
+       now comes up behind them fast, so rather than hold the veil back for
+       them they darken toward the ink at the same rate it thins — the picture
+       arrives just as quickly, the links simply keep their contrast.
+
+       Declared plain first: a browser without color-mix drops the @supports
+       block and keeps flat --muted, which is what the page used to be. */
+    --muted-lift: var(--muted);
     /* Translucent ink rather than a fixed grey: a card is transparent at rest
        and white on hover, so its outline has to hold up over both the painting
        and the paper. A flat hairline disappeared into the watercolour. */
@@ -32,12 +42,24 @@
     --delft: #1e3f8f;
     --wash:  #eff2fa;
 
-    /* How much eggshell sits between the painting and the text. Raise to
-       favour legibility, lower to favour the picture. */
-    --veil: 0.9;
+    /* How much eggshell sits between the painting and the text at rest. Raise
+       to favour legibility, lower to favour the picture. */
+    --veil: 0.72;
+
+    /* 0 at the top of the page, 1 by the time the roster has scrolled past
+       the top of the screen, moving the whole way down. water.js drives it;
+       without JavaScript it never leaves 0 and the page behaves as it always
+       did — which is the only reason --veil can sit this low. */
+    --reveal: 0;
 
     --radius: 20px;
     --ease:   cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@supports (color: color-mix(in srgb, red, blue)) {
+    :root {
+        --muted-lift: color-mix(in srgb, var(--muted), var(--ink) calc(var(--reveal) * 100%));
+    }
 }
 
 *,
@@ -55,30 +77,63 @@ body {
     text-rendering: optimizeLegibility;
 }
 
-/* The canal, veiled back to a wash so the type stays the thing you read.
+/* --------------------------------------------------------------------------
+   The backdrop
 
-   A fixed pseudo-element rather than background-attachment: fixed, which iOS
-   either ignores or renders janky. */
-body::before {
-    content: "";
+   Three fixed layers. Bottom: the canal as a plain CSS background — what a
+   browser without WebGL gets, and what is on screen for the moment before the
+   texture uploads. Middle: the same painting on a canvas, with everything
+   below the waterline rippling (water.js). Top: the eggshell veil that keeps
+   the type readable, which lifts as the roster scrolls away.
+
+   Fixed elements rather than background-attachment: fixed, which iOS either
+   ignores or renders janky.
+   -------------------------------------------------------------------------- */
+
+.backdrop {
     position: fixed;
     inset: 0;
     z-index: -1;
-    background-image:
-        linear-gradient(
-            to bottom,
-            rgba(239, 237, 233, calc(var(--veil) + 0.06)) 0%,
-            rgba(239, 237, 233, var(--veil)) 45%,
-            rgba(239, 237, 233, calc(var(--veil) - 0.06)) 100%
-        ),
-        url("canal.webp");
+    background-image: url("canal.webp");
     /* The painting is nearly square, so a wide viewport must crop it
        somewhere. Held just above centre: that keeps the rooflines and the
        waterline both in frame, which are the two lines that make it read as
-       Amsterdam rather than as texture. */
+       Amsterdam rather than as texture.
+
+       The canvas reproduces this exactly at rest, then slides the 38% down
+       toward the water as --reveal rises. Change one and change the other:
+       FRAME_REST in water.js. */
     background-size: cover;
     background-position: center 38%;
     background-repeat: no-repeat;
+}
+
+.backdrop-water {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    /* Framed identically to the layer underneath, so revealing it is
+       invisible. It waits for its texture rather than flashing empty. */
+    opacity: 0;
+}
+
+.water-on .backdrop-water {
+    opacity: 1;
+}
+
+.backdrop-veil {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(239, 237, 233, calc(var(--veil) + 0.06)) 0%,
+        rgba(239, 237, 233, var(--veil)) 45%,
+        rgba(239, 237, 233, calc(var(--veil) - 0.06)) 100%
+    );
+    /* At 1 there is nothing left between you and the painting. */
+    opacity: calc(1 - var(--reveal));
 }
 
 .page {
@@ -117,7 +172,7 @@ body::before {
     max-width: 33ch;
     font-size: clamp(0.98rem, 2.6vw, 1.06rem);
     line-height: 1.5;
-    color: var(--muted);
+    color: var(--muted-lift);
 }
 
 /* --------------------------------------------------------------------------
@@ -188,7 +243,7 @@ body::before {
     margin: 0.2rem 0 0;
     font-size: 0.88rem;
     line-height: 1.3;
-    color: var(--muted);
+    color: var(--muted-lift);
 }
 
 /* --------------------------------------------------------------------------
@@ -214,7 +269,7 @@ body::before {
     padding: 0 0.15rem;
     font-family: 'IBM Plex Mono', ui-monospace, monospace;
     font-size: 0.83rem;
-    color: var(--muted);
+    color: var(--muted-lift);
     text-decoration: none;
     border-radius: 9px;
     transition: color 0.3s var(--ease), background-color 0.3s var(--ease);
@@ -272,6 +327,45 @@ body::before {
 
 .dest:focus-visible .route::after {
     transform: scaleX(1);
+}
+
+/* --------------------------------------------------------------------------
+   Past the roster
+
+   Scroll room with nothing in it. Across it the veil lifts and the water
+   starts moving, so the bottom of the page is the painting and nothing else.
+
+   Both of these are inert until water.js has a working canvas to draw on:
+   without one there is nothing down there to arrive at, and the tail would be
+   a screenful of empty eggshell.
+   -------------------------------------------------------------------------- */
+
+.tail {
+    height: 0;
+}
+
+.water-on .tail {
+    /* Enough to carry the last card off the top of the screen, plus somewhere
+       to sit and watch the water once it has gone. Shortening it does not
+       break anything — water.js caps the lift against whatever scrolling is
+       actually left. */
+    height: 120vh;
+}
+
+/* A plumb line dropping off the last card — the only hint that the page keeps
+   going. Quiet enough to miss, which is the same bargain as the hidden link. */
+.plumb {
+    display: none;
+}
+
+.water-on .plumb {
+    display: block;
+    width: 1px;
+    height: 3.5rem;
+    margin: 1.75rem auto 0;
+    background: linear-gradient(to bottom, var(--line), rgba(20, 24, 31, 0));
+    /* Gone before the veil is, so it never hangs over open water. */
+    opacity: clamp(0, calc(1 - var(--reveal) * 1.5), 1);
 }
 
 /* --------------------------------------------------------------------------
