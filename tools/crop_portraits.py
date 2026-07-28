@@ -32,7 +32,10 @@ PEOPLE = {
     # right of centre and high in the frame, so the crop follows him up.
     "boris":   {"file": "boris.jpeg",  "focus": (0.520, 0.320), "zoom": 0.63},
 
-    "thomas":  {"file": "thomas.jpeg", "focus": (0.508, 0.381), "zoom": 1.00},
+    # Held slightly left of centre so the crop clears the person at his
+    # shoulder, and because he is looking right — the extra room is where his
+    # eyeline goes.
+    "thomas":  {"file": "thomas.jpeg", "focus": (0.536, 0.395), "zoom": 0.65},
 
     # A full-figure studio frame shot from above. At 68 px the whole pose would
     # read as a smudge, so the crop comes right down onto his face to keep the

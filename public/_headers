@@ -1,9 +1,11 @@
 # Cloudflare Pages header rules.
 
-# Portrait filenames are stable, so a week of caching is safe and saves the
-# repeat visitor ~55 KB. Not `immutable` — replacing a photo keeps its name.
+# Portrait filenames are stable across a photo swap, so a long max-age would
+# serve a stale face to anyone who had already visited. Short freshness window,
+# then serve-stale-while-revalidating: repeat visits still render instantly and
+# a replaced portrait reaches everyone within the hour.
 /portraits/*
-  Cache-Control: public, max-age=604800
+  Cache-Control: public, max-age=3600, stale-while-revalidate=604800
 
 /*
   X-Content-Type-Options: nosniff
