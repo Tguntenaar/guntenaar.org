@@ -67,24 +67,27 @@ function enhance(content) {
       // seam * mix(0.55, 1) * ambientOcclusion, so no seam colour alone can
       // lift them all the way. Flattening the lean and the rise shows less
       // wall in the first place, which is what actually calms the edges.
-      tilt: 10,
-      perspective: 0.25,
-      float: 0.1,
-      speed: 0.55,
-      shine: 0.22,
-      lift: 0.08,
-      radius: 1000,
-      flow: 0.9,
-      swirl: 3,
-      trail: 0.25,
-      iridescence: 0.35,
+      tilt: 6,
+      perspective: 0.18,
+      float: 0.07,
+      speed: 0.3,
+      shine: 0.14,
+      lift: 0.05,
+      radius: 1150,
+      // Calm rather than eager. `flow` and `swirl` are what make the window
+      // chase the cursor, so both come right down; `trail` is raised so it
+      // lingers and settles instead of snapping shut behind you.
+      flow: 0.3,
+      swirl: 1,
+      trail: 0.62,
+      iridescence: 0.25,
       bloom: 0,
       grain: 0.2,
       // "auto" multiplies the page background by 0.55 on a light page, which
       // lands on a mid-grey around #8c8c8c and reads as hard dark bars. Pinned
       // instead to roughly the site's own hairline (--line, #e7e9ef) so the
       // tile edges sit in the same register as the panel borders.
-      gapColor: [0.91, 0.92, 0.94],
+      gapColor: [0.965, 0.97, 0.978],
     },
   );
 
