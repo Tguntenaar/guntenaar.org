@@ -3,15 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guntenaar</title>
-    <meta name="description" content="Four Guntenaars and where to find them: Joost, Boris, Thomas and Olivier.">
+    <title>Guntenaar — Joost, Boris, Thomas &amp; Olivier</title>
+    <meta name="description" content="Four Guntenaars and where to find each of them: Joost in photography, Boris in accounting and drones, Thomas and Olivier in software.">
     <meta name="theme-color" content="#efede9">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
 
-    <meta property="og:title" content="Guntenaar">
-    <meta property="og:description" content="Four Guntenaars and where to find them.">
+    <!-- The apex redirects to www, so www is the address that exists. Anything
+         pointing at the bare domain here would name a URL that only 308s. -->
+    <link rel="canonical" href="https://www.guntenaar.org/">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+
+    <meta property="og:title" content="Guntenaar — Joost, Boris, Thomas &amp; Olivier">
+    <meta property="og:description" content="Four Guntenaars and where to find each of them: a photographer, an accountant with a drone company, and two engineers.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://guntenaar.org/">
+    <meta property="og:url" content="https://www.guntenaar.org/">
+    <meta property="og:site_name" content="Guntenaar">
+    <meta property="og:locale" content="en_US">
+    <!-- Absolute, and 1200x630: every chat app resolves og:image against its
+         own origin, not the page's, and skips images it cannot size. -->
+    <meta property="og:image" content="https://www.guntenaar.org/og.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Four Guntenaars — Joost, Boris, Thomas and Olivier — over a watercolour of an Amsterdam canal.">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Guntenaar — Joost, Boris, Thomas &amp; Olivier">
+    <meta name="twitter:description" content="Four Guntenaars and where to find each of them: a photographer, an accountant with a drone company, and two engineers.">
+    <meta name="twitter:image" content="https://www.guntenaar.org/og.jpg">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,6 +39,97 @@
 
     <link rel="preconnect" href="https://us-assets.i.posthog.com">
     <script defer src="analytics.js"></script>
+
+    <!-- The page's whole claim is "these four people are these four sites".
+         `sameAs` is how that claim is made machine-readable: it is the property
+         search engines use to merge separate profiles into one entity, so a
+         search for a name has a chance of surfacing the right Guntenaar.
+
+         geforcy.com is deliberately absent — see secret.js. A hidden link in
+         the structured data would be indexed, which defeats the point. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://www.guntenaar.org/#website",
+          "url": "https://www.guntenaar.org/",
+          "name": "Guntenaar",
+          "description": "Four Guntenaars and where to find each of them.",
+          "inLanguage": "en",
+          "mainEntity": { "@id": "https://www.guntenaar.org/#people" }
+        },
+        {
+          "@type": "ItemList",
+          "@id": "https://www.guntenaar.org/#people",
+          "name": "The Guntenaars",
+          "itemListOrder": "https://schema.org/ItemListUnordered",
+          "numberOfItems": 4,
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "item": { "@id": "https://www.guntenaar.org/#joost" } },
+            { "@type": "ListItem", "position": 2, "item": { "@id": "https://www.guntenaar.org/#boris" } },
+            { "@type": "ListItem", "position": 3, "item": { "@id": "https://www.guntenaar.org/#thomas" } },
+            { "@type": "ListItem", "position": 4, "item": { "@id": "https://www.guntenaar.org/#olivier" } }
+          ]
+        },
+        {
+          "@type": "Person",
+          "@id": "https://www.guntenaar.org/#joost",
+          "name": "Joost Guntenaar",
+          "givenName": "Joost",
+          "familyName": "Guntenaar",
+          "jobTitle": "Photographer",
+          "image": "https://www.guntenaar.org/portraits/joost.webp",
+          "url": "https://joost.guntenaar.org/",
+          "sameAs": [
+            "https://joost.guntenaar.org/",
+            "https://joostguntenaar.com/"
+          ]
+        },
+        {
+          "@type": "Person",
+          "@id": "https://www.guntenaar.org/#boris",
+          "name": "Boris Guntenaar",
+          "givenName": "Boris",
+          "familyName": "Guntenaar",
+          "jobTitle": "Accountant",
+          "image": "https://www.guntenaar.org/portraits/boris.webp",
+          "url": "https://borisguntenaar.com/",
+          "sameAs": [
+            "https://borisguntenaar.com/",
+            "https://zgdrone.com/"
+          ]
+        },
+        {
+          "@type": "Person",
+          "@id": "https://www.guntenaar.org/#thomas",
+          "name": "Thomas Guntenaar",
+          "givenName": "Thomas",
+          "familyName": "Guntenaar",
+          "jobTitle": "Software Engineer",
+          "image": "https://www.guntenaar.org/portraits/thomas.webp",
+          "url": "https://thomasguntenaar.com/",
+          "sameAs": [
+            "https://thomasguntenaar.com/"
+          ]
+        },
+        {
+          "@type": "Person",
+          "@id": "https://www.guntenaar.org/#olivier",
+          "name": "Olivier Guntenaar",
+          "givenName": "Olivier",
+          "familyName": "Guntenaar",
+          "jobTitle": "Software Engineer",
+          "image": "https://www.guntenaar.org/portraits/olivier.webp",
+          "url": "https://speable.com/",
+          "sameAs": [
+            "https://speable.com/"
+          ]
+        }
+      ]
+    }
+    </script>
 </head>
 <body>
 

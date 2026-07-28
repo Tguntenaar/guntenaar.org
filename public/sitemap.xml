@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- One page, one entry. www rather than the apex: the apex 308s here, and a
+     sitemap that lists redirects is a sitemap of URLs that do not exist.
+     joost.guntenaar.org is a separate host with its own site, so it is not
+     ours to list. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.guntenaar.org/</loc>
+    <lastmod>2026-07-28</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Fonts make_og_image.py pulls from Google Fonts to draw the card. Cached, not
+# committed — they are the same families index.html already loads at runtime.
+tools/.fonts
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

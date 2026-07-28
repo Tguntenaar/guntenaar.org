@@ -16,6 +16,9 @@ public/
   analytics.js    PostHog
   secret.js       the hidden geforcy.com link
   canal.webp      the Amsterdam watercolour behind everything
+  og.jpg          the 1200x630 link-preview card, generated
+  robots.txt      allow everything, point at the sitemap
+  sitemap.xml     one URL — edit lastmod when the page changes
   _headers        caching + security headers, if ever served by Cloudflare
   favicon.svg
   portraits/      face-cropped 400x400 WebP, ~14 KB each
@@ -39,6 +42,25 @@ phone photos and the page renders them at 68 px, so they are not shipped
 directly. To reframe one, adjust its `focus` (face centre, as a fraction of
 width and height) and `zoom` (square side, as a fraction of the shorter edge)
 in `tools/crop_portraits.py` and re-run it.
+
+### The link-preview card
+
+`public/og.jpg` is what chat apps and search results show when the site is
+shared. It is drawn by `tools/make_og_image.py` from the assets the page
+already has — the watercolour, the portraits, the same two fonts — so a change
+to the page can be carried over by re-running it:
+
+```sh
+python3 tools/make_og_image.py
+```
+
+The fonts come from Google Fonts into `tools/.fonts/` on first run and are not
+committed.
+
+Scrapers cache preview images hard and mostly ignore `Cache-Control`, so after
+replacing it, re-scrape by hand where it matters — Facebook's Sharing
+Debugger, LinkedIn's Post Inspector. WhatsApp and iMessage follow whatever
+Facebook has cached.
 
 ### The hidden link
 
@@ -71,7 +93,13 @@ those settings itself.
 | Output directory | `public` |
 
 DNS is at dds.nl, not Vercel. The apex `A` record points at `216.198.79.1`
-(Vercel), and `www` is a CNAME to Vercel. Joost's photography site lives on at
+(Vercel), and `www` is a CNAME to Vercel.
+
+**`www.guntenaar.org` is the canonical hostname.** The apex 308s to it, which
+is the Vercel project's own domain setting. The `<link rel="canonical">`, the
+`og:` URLs and `sitemap.xml` all name `www` to match; if that redirect is ever
+flipped to point the other way, those three have to be flipped with it or the
+site will be telling search engines to index a URL that only redirects. Joost's photography site lives on at
 `joost.guntenaar.org`; it and the apex are separate Vercel projects, so a
 hostname assigned to the wrong one silently serves the wrong site.
 

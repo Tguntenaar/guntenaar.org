@@ -1,0 +1,8 @@
+# Everything here is meant to be found. The one hidden link on the page is not
+# in the markup at all until you go looking for it (see secret.js), so there is
+# nothing to disallow.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://www.guntenaar.org/sitemap.xml
