@@ -229,6 +229,17 @@ body::before {
     transition: color 0.3s var(--ease), background-color 0.3s var(--ease);
 }
 
+/* .dest sets display:flex, which beats the browser's own [hidden] rule — so a
+   hidden destination needs saying explicitly or it would stay on screen. */
+.dest[hidden] {
+    display: none;
+}
+
+/* Arriving after three clicks on the portrait. */
+.dest.is-revealed {
+    animation: settle 0.7s var(--ease) both;
+}
+
 .dest-label {
     flex: none;
     overflow: hidden;

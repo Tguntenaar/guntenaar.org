@@ -94,7 +94,11 @@
                     <span class="route" aria-hidden="true"></span>
                     <span class="arrow" aria-hidden="true">&rarr;</span>
                 </a>
-                <a class="dest" href="https://geforcy.com/">
+                <!-- Kept out of the page until his portrait is clicked three
+                     times. `hidden` rather than a class so it is out of the
+                     tab order and the accessibility tree too — a secret you
+                     can reach by pressing Tab is not a secret. -->
+                <a class="dest" href="https://geforcy.com/" hidden data-secret>
                     <span class="dest-label">geforcy.com</span>
                     <span class="route" aria-hidden="true"></span>
                     <span class="arrow" aria-hidden="true">&rarr;</span>
@@ -128,6 +132,7 @@
      browser lacks the experimental HTML-in-canvas API, the page above is
      already the finished page. -->
 <script type="module" src="hex-float-init.js"></script>
+<script type="module" src="secret.js"></script>
 
 </body>
 </html>
