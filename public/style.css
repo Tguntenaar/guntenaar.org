@@ -57,13 +57,13 @@ body {
 
 /* The canal, veiled back to a wash so the type stays the thing you read.
 
-   Declared on both the fixed backdrop and the Hex Float content host, and it
-   has to be. The shader captures only the canvas subtree, so a backdrop
-   painted on body would be invisible to it — the effect would sample flat
-   eggshell and paint straight over the picture. Putting it on the captured
-   element instead means the tiles are made of the painting. */
-body::before,
-.hexfloat-content {
+   A fixed pseudo-element rather than background-attachment: fixed, which iOS
+   either ignores or renders janky. */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
     background-image:
         linear-gradient(
             to bottom,
@@ -79,15 +79,6 @@ body::before,
     background-size: cover;
     background-position: center 38%;
     background-repeat: no-repeat;
-}
-
-/* A fixed pseudo-element rather than background-attachment: fixed, which iOS
-   either ignores or renders janky. */
-body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
 }
 
 .page {
@@ -363,50 +354,6 @@ body::before {
 .person:nth-child(2) { animation-delay: 0.17s; }
 .person:nth-child(3) { animation-delay: 0.24s; }
 .person:nth-child(4) { animation-delay: 0.31s; }
-
-/* --------------------------------------------------------------------------
-   Hex Float stage
-
-   Only ever present when hex-float-init.js has confirmed the browser can run
-   the effect; until then none of these elements exist and the page is laid out
-   exactly as authored.
-   -------------------------------------------------------------------------- */
-
-.hexfloat-stage {
-    position: fixed;
-    inset: 0;
-    overflow: hidden;
-}
-
-.hexfloat-source,
-.hexfloat-output {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-}
-
-/* The source canvas must stay fully rendered — drawElementImage captures what
-   is actually painted, so hiding it captures nothing. The output canvas sits
-   on top and is what the visitor sees. */
-.hexfloat-content {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-}
-
-/* Transparent to the pointer so clicks, selection and scrolling reach the real
-   links in the source subtree underneath. */
-.hexfloat-output {
-    pointer-events: none;
-}
-
-.hexfloat-on,
-.hexfloat-on body {
-    overflow: hidden;
-}
 
 @media (prefers-reduced-motion: reduce) {
     *,

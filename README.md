@@ -13,10 +13,14 @@ public/
   index.html      the page
   404.html        not-found, same design
   style.css       all of it
-  _headers        Cloudflare Pages caching + security headers
+  analytics.js    PostHog
+  secret.js       the hidden geforcy.com link
+  canal.webp      the Amsterdam watercolour behind everything
+  _headers        caching + security headers, if ever served by Cloudflare
   favicon.svg
   portraits/      face-cropped 400x400 WebP, ~14 KB each
 originals/        the full-resolution source photos — keep these
+vercel.json       build + header config for the live host
 ```
 
 ## Working on it
@@ -36,42 +40,40 @@ directly. To reframe one, adjust its `focus` (face centre, as a fraction of
 width and height) and `zoom` (square side, as a fraction of the shorter edge)
 in `tools/crop_portraits.py` and re-run it.
 
-## The Hex Float effect
+### The hidden link
 
-`public/hex-float.js` is [Canvas UI](https://canvasui.dev)'s Hex Float, vanilla
-build, compiled to a plain ES module so the site keeps its no-build-step
-property. It is wired up by `public/hex-float-init.js`.
+`public/secret.js` keeps any `[data-secret]` destination out of the page — out
+of the tab order and the accessibility tree, not merely invisible — until that
+row's portrait is clicked three times. Currently just Thomas's `geforcy.com`.
+Once found it stays found, in `localStorage`.
 
-**It is off for almost everyone, by design.** The effect hosts the live page
-inside a `<canvas layoutsubtree>` and repaints it through a WebGL shader, which
-needs the experimental HTML-in-canvas API — Chrome/Edge 140+ with
-`chrome://flags/#canvas-draw-element`, or a production origin trial token.
-Everywhere else, including every iOS browser, children of a `<canvas>` are
-inert fallback content that never renders. So the init script proves the
-browser can paint the subtree back out *before* it moves anything, and puts the
-page back if setup fails anyway. Without support you get the plain page.
+## Analytics
 
-To regenerate the library after an upstream release:
-
-```sh
-curl -s https://canvasui.dev/r/hex-float-vanilla.json \
-  | python3 -c 'import json,sys; print(json.load(sys.stdin)["files"][0]["content"])' \
-  > /tmp/HexFloatVanilla.ts
-npx esbuild /tmp/HexFloatVanilla.ts --bundle --format=esm --target=es2020 \
-  --minify --outfile=public/hex-float.js
-```
+PostHog, project 531417 on US cloud, in `public/analytics.js`. The `phc_` key
+is a public write-only project key, so it lives in the repo rather than in an
+environment variable; the site has no build step to inject one with.
 
 ## Hosting
 
-Cloudflare Pages, deployed from this repo via Cloudflare's Git integration —
-no GitHub Actions workflow and no deploy secrets.
+**Vercel**, deployed from this repo on every push to `main`. No GitHub Actions
+workflow and no deploy secrets.
+
+`vercel.json` is what makes that work, and it has to exist: the Vercel project
+predates the rewrite and still has *Framework Preset: Vite* saved in its
+dashboard. With the Vue toolchain gone there is no `vite` binary, so every
+build died on `vite: command not found` until the repo started overriding
+those settings itself.
 
 | Setting          | Value    |
 | ---------------- | -------- |
+| Framework        | *(none)* |
 | Build command    | *(none)* |
 | Output directory | `public` |
 
-Note that the `guntenaar.org` apex currently serves Joost's photography site
-from a separate host (nginx at dds.nl), and the domain's nameservers are not
-Cloudflare's. Pointing the apex here is a deliberate DNS change, not something
-that follows from deploying.
+DNS is at dds.nl, not Vercel. The apex `A` record points at `216.198.79.1`
+(Vercel), and `www` is a CNAME to Vercel. Joost's photography site lives on at
+`joost.guntenaar.org`; it and the apex are separate Vercel projects, so a
+hostname assigned to the wrong one silently serves the wrong site.
+
+`public/_headers` is Cloudflare syntax and Vercel ignores it. The same rules
+are duplicated in `vercel.json`; change both or drop the one you do not use.
