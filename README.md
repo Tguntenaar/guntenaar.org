@@ -15,8 +15,10 @@ public/
   style.css       all of it
   analytics.js    PostHog
   secret.js       the hidden geforcy.com link
-  water.js        the canal moving, once you scroll past the roster
-  canal.webp      the Amsterdam watercolour behind everything
+  water.js        the canal moving, and the backdrop compositor
+  layover-dev.js  hand controls for the backdrop, loaded only by ?dev
+  canal.webp      the Amsterdam watercolour behind everything — the day scene
+  layover/        the other painted scenes and the per-house light layers
   og.jpg          the 1200x630 link-preview card, generated
   robots.txt      allow everything, point at the sitemap
   sitemap.xml     one URL — edit lastmod when the page changes
@@ -24,6 +26,7 @@ public/
   favicon.svg
   portraits/      face-cropped 400x400 WebP, ~14 KB each
 originals/        the full-resolution source photos — keep these
+layover/          the painted source PNGs, 12 MB — keep these
 vercel.json       build + header config for the live host
 ```
 
@@ -109,6 +112,60 @@ The render loop only runs while the water has movement left in it, so sitting
 at the top of the page costs nothing, and `prefers-reduced-motion` still
 reveals the painting but holds it still.
 
+### The layover
+
+`layover/` holds the canal painted several times over — the whole scene at
+sunny, day, golden and two shades of night, and one transparent layer per
+house per scene, holding just that building and its reflection. Every file is the same
+1072x1008 frame as `canal.webp`, so a layer drops onto the base with no offset
+and no seam. That alignment is the whole trick; nothing in the code positions
+anything.
+
+`tools/build_layover.py` encodes them to `public/layover/*.webp` — 12 MB of
+PNG becomes 1.3 MB, and a house layer collapses to 10-20 KB because almost
+every pixel in it is transparent. Alpha is kept lossless, because the cutout
+is what aligns the house to the scene and a soft edge there reads as a halo.
+Re-run it after repainting anything.
+
+`water.js` composites: it crossfades the base between day and night, then
+blends the hovered houses over it, all of them sharing the water distortion —
+so a lit window ripples in the reflection along with everything around it. The
+branches are on uniforms, so with nothing hovered and the scene not
+mid-crossfade nine of the ten samplers go untouched and the idle cost is one
+texture read.
+
+Hovering a house picks it out. Each house has two versions — `sunny` and
+`night-light` — and the hovered house crossfades between them on the same
+`dark` that drives the scene behind it, so pointing at a building in daylight
+brings the sun out on it, pointing at one after dark turns its lights on, and
+a house held through a sunset turns over with everything else. The two share a
+silhouette to within a pixel of antialiasing, which is what lets them be mixed
+as straight alpha.
+
+The hit region is the layer's own alpha channel, read once into a quarter-scale
+mask, so the art *is* the hit region and there is no second set of coordinates
+to keep in step with it. Pointer devices only.
+
+Two things worth knowing:
+
+- **Ten samplers, and WebGL 1 only promises eight.** Everything current
+  reports sixteen. Where it does not, `water.js` drops the sunny halves and
+  generates a six-sampler shader instead, in which hovering only lights houses
+  after dark. Nothing else changes.
+- **The page is still day-only.** Nothing turns the scene dark yet, so
+  nothing on the dark side is prefetched — the night base and the four
+  lit-window layers are fetched together by `nightfall()` the first time
+  `setNight` is called, and `dark` cannot start rising until all of them have
+  landed. One version of each house *is* prefetched (57 KB), because its alpha
+  is what the pointer is tested against and in daylight it is also the one
+  that shows. The backdrop costs about 300 KB in daylight, 540 KB once the
+  page starts going dark.
+
+Add `?dev` to the URL for a panel with a night slider and a toggle per house,
+plus `window.layover` to drive the same things from the console. It lives in
+`layover-dev.js`, which a page without `?dev` never fetches — the finished
+page has no controls.
+
 ## Analytics
 
 PostHog, project 531417 on US cloud, in `public/analytics.js`. The `phc_` key
@@ -145,3 +202,6 @@ hostname assigned to the wrong one silently serves the wrong site.
 
 `public/_headers` is Cloudflare syntax and Vercel ignores it. The same rules
 are duplicated in `vercel.json`; change both or drop the one you do not use.
+
+
+`cd public && python3 -m http.server 8799`
