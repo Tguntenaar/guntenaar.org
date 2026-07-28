@@ -67,8 +67,12 @@ function enhance(content) {
       // seam * mix(0.55, 1) * ambientOcclusion, so no seam colour alone can
       // lift them all the way. Flattening the lean and the rise shows less
       // wall in the first place, which is what actually calms the edges.
-      tilt: 6,
-      perspective: 0.18,
+      // The lean is the point of the effect — flattening it to 6 had thrown
+      // away the sense of the page as a surface receding. Back up, with the
+      // rise and the shine kept low so the tilt reads as angle rather than as
+      // shaded walls.
+      tilt: 14,
+      perspective: 0.32,
       float: 0.07,
       speed: 0.3,
       shine: 0.14,
@@ -83,11 +87,11 @@ function enhance(content) {
       iridescence: 0.25,
       bloom: 0,
       grain: 0.2,
-      // "auto" multiplies the page background by 0.55 on a light page, which
-      // lands on a mid-grey around #8c8c8c and reads as hard dark bars. Pinned
-      // instead to roughly the site's own hairline (--line, #e7e9ef) so the
-      // tile edges sit in the same register as the panel borders.
-      gapColor: [0.965, 0.97, 0.978],
+      // "auto" multiplies the page background by 0.55, which on a light page
+      // lands near #8c8c8c and reads as hard dark bars. Pinned just under the
+      // eggshell ground (--shell, #f5f1e7) instead, and warm to match it — a
+      // cool grey seam over a warm page looks like dirt.
+      gapColor: [0.952, 0.937, 0.898],
     },
   );
 

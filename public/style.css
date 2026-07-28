@@ -14,12 +14,17 @@
    ========================================================================== */
 
 :root {
+    /* Eggshell ground, white panels. Keeping the cards pure white gives the
+       rows something to sit on — they read as paper laid on a warm surface
+       rather than dissolving into it, which is what a single flat off-white
+       would have done. */
+    --shell: #f5f1e7;
     --paper: #ffffff;
     --ink:   #14181f;
     --muted: #767e8b;
-    --line:  #e7e9ef;
+    --line:  #e8e4da;
     --delft: #1e3f8f;
-    --wash:  #f4f6fb;
+    --wash:  #eff2fa;
 
     --radius: 20px;
     --ease:   cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -33,7 +38,7 @@
 
 body {
     margin: 0;
-    background: var(--paper);
+    background: var(--shell);
     color: var(--ink);
     font-family: 'Archivo', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
