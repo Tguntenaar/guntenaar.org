@@ -36,6 +36,31 @@ directly. To reframe one, adjust its `focus` (face centre, as a fraction of
 width and height) and `zoom` (square side, as a fraction of the shorter edge)
 in `tools/crop_portraits.py` and re-run it.
 
+## The Hex Float effect
+
+`public/hex-float.js` is [Canvas UI](https://canvasui.dev)'s Hex Float, vanilla
+build, compiled to a plain ES module so the site keeps its no-build-step
+property. It is wired up by `public/hex-float-init.js`.
+
+**It is off for almost everyone, by design.** The effect hosts the live page
+inside a `<canvas layoutsubtree>` and repaints it through a WebGL shader, which
+needs the experimental HTML-in-canvas API — Chrome/Edge 140+ with
+`chrome://flags/#canvas-draw-element`, or a production origin trial token.
+Everywhere else, including every iOS browser, children of a `<canvas>` are
+inert fallback content that never renders. So the init script proves the
+browser can paint the subtree back out *before* it moves anything, and puts the
+page back if setup fails anyway. Without support you get the plain page.
+
+To regenerate the library after an upstream release:
+
+```sh
+curl -s https://canvasui.dev/r/hex-float-vanilla.json \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["files"][0]["content"])' \
+  > /tmp/HexFloatVanilla.ts
+npx esbuild /tmp/HexFloatVanilla.ts --bundle --format=esm --target=es2020 \
+  --minify --outfile=public/hex-float.js
+```
+
 ## Hosting
 
 Cloudflare Pages, deployed from this repo via Cloudflare's Git integration —
