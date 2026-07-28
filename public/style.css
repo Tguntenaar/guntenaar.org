@@ -319,12 +319,18 @@ body {
     display: block;
 }
 
-/* The source canvas is the layout host, not something to look at — the shader
-   reads it and the output canvas is what the visitor sees. */
-.hexfloat-source {
-    visibility: hidden;
+/* The source canvas must stay fully rendered — drawElementImage captures what
+   is actually painted, so hiding it captures nothing. The output canvas sits
+   on top and is what the visitor sees. */
+.hexfloat-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
 }
 
+/* Transparent to the pointer so clicks, selection and scrolling reach the real
+   links in the source subtree underneath. */
 .hexfloat-output {
     pointer-events: none;
 }

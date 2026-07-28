@@ -41,16 +41,23 @@ function enhance(content) {
   source.className = "hexfloat-source";
   source.setAttribute("layoutsubtree", "");
 
+  // The captured element has to be a full-size scrollable box, not the page
+  // container itself — that one is max-width'd and centred, and the shader
+  // needs something that fills the canvas to sample.
+  const host = document.createElement("div");
+  host.className = "hexfloat-content";
+  host.setAttribute("data-canvasui-content", "");
+
   const output = document.createElement("canvas");
   output.className = "hexfloat-output";
 
-  content.setAttribute("data-canvasui-content", "");
-  source.appendChild(content);
+  host.appendChild(content);
+  source.appendChild(host);
   stage.append(source, output);
   parent.insertBefore(stage, anchor);
 
   const instance = createHexFloat(
-    { source, content, output },
+    { source, content: host, output },
     {
       // Tuned well below the library's defaults. The page is a white index
       // whose job is legibility; the tiles should read as a surface the names
@@ -75,7 +82,6 @@ function enhance(content) {
   if (!instance) {
     // WebGL2 context creation can still fail after the probe. Put the page
     // back exactly where it was rather than leave it stranded in a canvas.
-    content.removeAttribute("data-canvasui-content");
     parent.insertBefore(content, anchor);
     stage.remove();
     anchor.remove();
