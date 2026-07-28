@@ -102,13 +102,19 @@ body {
     flex-direction: column;
     gap: 1.1rem;
     padding: 1.2rem 1.15rem 1.3rem;
-    background: var(--paper);
+    /* At rest a row is the same value as the ground and exists only by its
+       hairline; hovering lifts it to white. The colour change is deliberately
+       slower than the movement — the card should look like it is warming up,
+       not switching on. Declared here rather than in :hover so the fade runs
+       at the same pace on the way out. */
+    background-color: var(--shell);
     border: 1px solid var(--line);
     border-radius: var(--radius);
     transition:
-        transform   0.35s var(--ease),
-        border-color 0.35s var(--ease),
-        box-shadow  0.35s var(--ease);
+        transform        0.35s var(--ease),
+        border-color     0.45s var(--ease),
+        box-shadow       0.55s var(--ease),
+        background-color 0.85s var(--ease);
 }
 
 .who {
@@ -254,6 +260,7 @@ body {
    hover to discover. */
 @media (hover: hover) and (pointer: fine) {
     .person:hover {
+        background-color: var(--paper);
         transform: translateY(-2px);
         border-color: #ccd5ea;
         box-shadow: 0 14px 34px -16px rgba(30, 63, 143, 0.3);
