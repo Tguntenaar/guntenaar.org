@@ -18,13 +18,23 @@
        rows something to sit on — they read as paper laid on a warm surface
        rather than dissolving into it, which is what a single flat off-white
        would have done. */
-    --shell: #f5f1e7;
+    /* --shell is sampled from the watercolour's own paper (its brightest 5%
+       averages #efede9), so the page ground and the painting are the same
+       stock and the edges of the image never announce themselves. */
+    --shell: #efede9;
     --paper: #ffffff;
     --ink:   #14181f;
-    --muted: #767e8b;
-    --line:  #e8e4da;
+    --muted: #6f7681;
+    /* Translucent ink rather than a fixed grey: a card is transparent at rest
+       and white on hover, so its outline has to hold up over both the painting
+       and the paper. A flat hairline disappeared into the watercolour. */
+    --line:  rgba(20, 24, 31, 0.14);
     --delft: #1e3f8f;
     --wash:  #eff2fa;
+
+    /* How much eggshell sits between the painting and the text. Raise to
+       favour legibility, lower to favour the picture. */
+    --veil: 0.9;
 
     --radius: 20px;
     --ease:   cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -43,6 +53,41 @@ body {
     font-family: 'Archivo', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+}
+
+/* The canal, veiled back to a wash so the type stays the thing you read.
+
+   Declared on both the fixed backdrop and the Hex Float content host, and it
+   has to be. The shader captures only the canvas subtree, so a backdrop
+   painted on body would be invisible to it — the effect would sample flat
+   eggshell and paint straight over the picture. Putting it on the captured
+   element instead means the tiles are made of the painting. */
+body::before,
+.hexfloat-content {
+    background-image:
+        linear-gradient(
+            to bottom,
+            rgba(239, 237, 233, calc(var(--veil) + 0.06)) 0%,
+            rgba(239, 237, 233, var(--veil)) 45%,
+            rgba(239, 237, 233, calc(var(--veil) - 0.06)) 100%
+        ),
+        url("canal.webp");
+    /* The painting is nearly square, so a wide viewport must crop it
+       somewhere. Held just above centre: that keeps the rooflines and the
+       waterline both in frame, which are the two lines that make it read as
+       Amsterdam rather than as texture. */
+    background-size: cover;
+    background-position: center 38%;
+    background-repeat: no-repeat;
+}
+
+/* A fixed pseudo-element rather than background-attachment: fixed, which iOS
+   either ignores or renders janky. */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
 }
 
 .page {
@@ -102,12 +147,12 @@ body {
     flex-direction: column;
     gap: 1.1rem;
     padding: 1.2rem 1.15rem 1.3rem;
-    /* At rest a row is the same value as the ground and exists only by its
-       hairline; hovering lifts it to white. The colour change is deliberately
-       slower than the movement — the card should look like it is warming up,
-       not switching on. Declared here rather than in :hover so the fade runs
-       at the same pace on the way out. */
-    background-color: var(--shell);
+    /* At rest a row is fully transparent — the painting shows straight through
+       it and only the hairline says a card is there. Hovering fades it up to
+       opaque white. Written as white-at-zero-alpha rather than `transparent`
+       so the fade cannot dip through grey on its way up, and declared here
+       rather than in :hover so it runs at the same pace on the way out. */
+    background-color: rgba(255, 255, 255, 0);
     border: 1px solid var(--line);
     border-radius: var(--radius);
     transition:
