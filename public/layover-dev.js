@@ -34,22 +34,33 @@ export function mount(layover) {
         fontSize: '9.5px', color: '#6f7681', marginBottom: '10px',
     }, [span('layover'), span('?dev')]));
 
-    /* ---- the scene ---- */
+    /* ---- the clock ----
+
+       The page drives this off the scroll. Touching anything here takes it
+       off the scroll and holds it, so you can sit at one hour and read the
+       rest of the page past it; `follow` hands it back. */
+
+    const stops = layover.stops();
+    const last = stops.length - 1;
 
     const readout = el('span', {fontVariantNumeric: 'tabular-nums', color: '#6f7681'});
-    panel.append(row('night', readout));
+    panel.append(row('hour', readout));
 
     const slider = el('input', {width: '100%', margin: '0 0 9px', accentColor: '#1e3f8f'});
     Object.assign(slider, {type: 'range', min: '0', max: '100', value: '0'});
-    slider.addEventListener('input', () => layover.setNight(+slider.value / 100));
+    slider.addEventListener('input', () => { layover.setHour(+slider.value / 100); paint(); });
     panel.append(slider);
 
-    const quick = el('div', {display: 'flex', gap: '6px', marginBottom: '12px'});
-    quick.append(
-        button('day', () => layover.setNight(0)),
-        button('night', () => layover.setNight(1)),
-    );
+    const quick = el('div', {display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px'});
+    stops.forEach((key, i) => quick.append(button(key, () => {
+        layover.setHour(i / last);
+        paint();
+    })));
     panel.append(quick);
+
+    const follow = button('follow scroll', () => { layover.follow(); paint(); });
+    Object.assign(follow.style, {width: '100%', margin: '6px 0 12px'});
+    panel.append(follow);
 
     /* ---- the houses ----
 
@@ -81,9 +92,15 @@ export function mount(layover) {
     /* Reads the state back rather than tracking it, so the panel stays honest
        when something else moves it — the console, or the page itself. */
     function paint() {
-        const night = layover.getNight();
-        slider.value = String(Math.round(night * 100));
-        readout.textContent = night.toFixed(2);
+        const hour = layover.getHour();
+        slider.value = String(Math.round(hour * 100));
+        readout.textContent = `${hour.toFixed(2)} ${stops[Math.round(hour * last)]}`;
+
+        /* Filled while the scroll has it, which is the shipped behaviour. */
+        const loose = !layover.held();
+        follow.style.background = loose ? INK : 'transparent';
+        follow.style.color = loose ? '#fff' : INK;
+        follow.style.borderColor = loose ? '#1e3f8f' : 'rgba(20,24,31,0.2)';
 
         const held = layover.pinned();
         const over = layover.hovered();

@@ -84,10 +84,16 @@ The painting already contains the reflection — it is a mirror in the original.
 sine waves, on a fixed full-viewport canvas sitting directly on top of the CSS
 background in `.backdrop`. The two are framed identically at rest, so the
 canvas fading in is invisible; from there the shader slides its
-`background-position` equivalent from 38% down to 70% as the veil goes, which
+`background-position` equivalent from 50% down to 70% as the veil goes, which
 is what brings the water up from a sliver at the bottom edge to half the
 screen. `FRAME_REST` in `water.js` and `background-position` on `.backdrop` in
 `style.css` are the same number written twice — change both.
+
+The painting is fitted to the width and never cropped sideways, because all
+four houses have to stay reachable and a cover fit on a phone throws the outer
+two off the edges. On a window wider than the painting is tall that leaves it
+overrunning top and bottom, which is what there is to sink into; on a narrow
+one it falls short, and `--surround` fills the bands above and below.
 
 The waterline, ripple height, size and speed are the four constants at the top
 of the file, in the painting's own coordinates rather than the screen's, so
@@ -95,9 +101,10 @@ they stay put however the viewport crops it.
 
 Everything is opt-in on success. The scroll room past the roster (`.tail`) and
 the plumb line hinting at it are zero-height until `water.js` has a working
-WebGL context and adds `water-on` to `<html>`; without one the page is exactly
-what it always was, with the still painting behind it and nothing extra to
-scroll through. `404.html` gets the same backdrop minus the canvas.
+WebGL context, sets `--tail` and adds `water-on` to `<html>`; without one the
+page is exactly what it always was, with the still painting behind it and
+nothing extra to scroll through. `404.html` gets the same backdrop minus the
+canvas.
 
 The reveal is linear from the very first pixel of scroll and complete when the
 bottom of the roster reaches the top of the screen, so the painting is arriving
@@ -115,8 +122,9 @@ reveals the painting but holds it still.
 ### The layover
 
 `layover/` holds the canal painted several times over — the whole scene at
-sunny, day, golden and two shades of night, and one transparent layer per
-house per scene, holding just that building and its reflection. Every file is the same
+sunny, day, golden and two shades of night, one transparent layer per house
+per scene holding just that building and its reflection, and two loose pieces
+of the night: the starred sky and the lit boat. Every file is the same
 1072x1008 frame as `canal.webp`, so a layer drops onto the base with no offset
 and no seam. That alignment is the whole trick; nothing in the code positions
 anything.
@@ -127,18 +135,47 @@ every pixel in it is transparent. Alpha is kept lossless, because the cutout
 is what aligns the house to the scene and a soft edge there reads as a halo.
 Re-run it after repainting anything.
 
-`water.js` composites: it crossfades the base between day and night, then
-blends the hovered houses over it, all of them sharing the water distortion —
-so a lit window ripples in the reflection along with everything around it. The
-branches are on uniforms, so with nothing hovered and the scene not
-mid-crossfade nine of the ten samplers go untouched and the idle cost is one
-texture read.
+`water.js` composites, and scroll is the clock. Four scenes — `day`, `sunny`,
+`golden`, `night-dark` — and the shader crossfades whichever pair you are
+between, linear the whole way. The stops and the colours their bands take are
+the `STOPS` array at the top of the file; adding a scene to it adds it to the
+ramp and lengthens the page to fit.
+
+The pacing is the other half of it. The day holds until the veil is spent and
+the last card is off the top of the screen (`dawn()`), so the painting gets a
+stretch of being nothing but itself before anything starts; then a whole
+screen of scrolling per crossfade, so a scene arrives, holds and gives way
+rather than flickering past. That makes the tail past the roster not somewhere
+to sit and watch the water but the day going down, and it puts the page at
+about four and a half screens end to end.
+
+`SCREENS` is the pace — one screenful per crossfade, and the floor on how long
+the first scene is held — and `DWELL` is how long the page goes on after night
+lands. `.tail` is sized from them by `room()` rather than written in the
+stylesheet, because most of the sum is the roster's own height and only
+JavaScript knows that; the stops land on the same screen boundaries on a phone
+as on a desktop. Raise `SCREENS` for a slower day and a longer page, lower it
+for the opposite.
+
+Two layers ride on the last crossfade alone — `nightsky`, whose stars and moon
+cover over the ones `night-dark` carries, and `boat`, the tour boat with its
+windows lit. Neither is a variant of anything; they are what the canal has
+after dark and nothing before it. Then the hovered houses go over the top.
+Everything shares the water distortion, so a lit window ripples in the
+reflection along with everything around it.
+
+Every branch is on a uniform, so each pixel in a frame takes the same one: two
+texture reads while the ramp is between stops, one while it is sitting on
+either end, and the night layers and unlit houses cost nothing until they are
+actually on screen.
 
 Hovering a house picks it out. Each house has two versions — `sunny` and
 `night-light` — and the hovered house crossfades between them on the same
-`dark` that drives the scene behind it, so pointing at a building in daylight
-brings the sun out on it, pointing at one after dark turns its lights on, and
-a house held through a sunset turns over with everything else. The two share a
+last-crossfade `dark` the night layers ride on, so pointing at a building in
+daylight brings the sun out on it, pointing at one after dark turns its lights
+on, and a house held through a sunset turns over with everything else. Two
+versions for four scenes is a compromise: at the sunny stop there is nothing
+brighter to reach for, so hovering there does very little. The two share a
 silhouette to within a pixel of antialiasing, which is what lets them be mixed
 as straight alpha.
 
@@ -146,23 +183,30 @@ The hit region is the layer's own alpha channel, read once into a quarter-scale
 mask, so the art *is* the hit region and there is no second set of coordinates
 to keep in step with it. Pointer devices only.
 
-Two things worth knowing:
+Three things worth knowing:
 
-- **Ten samplers, and WebGL 1 only promises eight.** Everything current
-  reports sixteen. Where it does not, `water.js` drops the sunny halves and
-  generates a six-sampler shader instead, in which hovering only lights houses
-  after dark. Nothing else changes.
-- **The page is still day-only.** Nothing turns the scene dark yet, so
-  nothing on the dark side is prefetched — the night base and the four
-  lit-window layers are fetched together by `nightfall()` the first time
-  `setNight` is called, and `dark` cannot start rising until all of them have
-  landed. One version of each house *is* prefetched (57 KB), because its alpha
-  is what the pointer is tested against and in daylight it is also the one
-  that shows. The backdrop costs about 300 KB in daylight, 540 KB once the
-  page starts going dark.
+- **Fourteen samplers, and WebGL 1 only promises eight.** Everything current
+  reports sixteen. Where it does not, `water.js` drops the sunny house halves
+  first — hovering then only lights houses after dark — and below ten it drops
+  the two middle scenes as well, leaving a straight day-to-night crossfade on
+  eight samplers, which is the floor of the spec. Nothing else changes.
+- **The scenes are fetched as they are needed.** Each is requested when the
+  crossfade that ends on it begins, which is a screenful of scrolling of
+  warning, and the whole dark side — the night scene, the sky, the boat and
+  the four lit-window houses — is fetched as one so nothing can be caught
+  halfway through a sunset. Until a scene lands the ramp waits at the last
+  stop it has; scroll faster than the network and the light simply catches up.
+  A visitor who never scrolls pays for the day scene only. The backdrop costs
+  about 300 KB in daylight and 1.1 MB by the bottom of the page.
+- **`--surround` is painted twice.** The shader owns every pixel of the
+  canvas, including the bands above and below the painting; the CSS custom
+  property is what shows in the moment before the canvas has a texture and
+  behind the page where it overscrolls. Both come off the same `band` ramp
+  over the same constants, so they cannot disagree.
 
-Add `?dev` to the URL for a panel with a night slider and a toggle per house,
-plus `window.layover` to drive the same things from the console. It lives in
+Add `?dev` to the URL for a panel with an hour slider, a button per stop, a
+toggle per house, and a `follow scroll` that hands the clock back to the page.
+`window.layover` drives the same things from the console. It lives in
 `layover-dev.js`, which a page without `?dev` never fetches — the finished
 page has no controls.
 

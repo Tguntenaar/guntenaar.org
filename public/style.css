@@ -42,6 +42,13 @@
     --delft: #1e3f8f;
     --wash:  #eff2fa;
 
+    /* What fills the screen above and below the painting, and what shows
+       behind the page where it overscrolls. water.js repaints it as the scene
+       moves through the day — every stop carries its own, in STOPS. This is
+       only the one it starts on, for the moment before the canvas has a
+       texture and for a browser without WebGL, which never leaves daylight. */
+    --surround: var(--shell);
+
     /* How much eggshell sits between the painting and the text at rest. Raise
        to favour legibility, lower to favour the picture. */
     --veil: 0.72;
@@ -70,7 +77,9 @@
 
 body {
     margin: 0;
-    background: var(--shell);
+    /* Only ever seen where the page overscrolls past its own ends, but that
+       is exactly where a strip of daylight would give the night away. */
+    background: var(--surround);
     color: var(--ink);
     font-family: 'Archivo', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -94,17 +103,20 @@ body {
     position: fixed;
     inset: 0;
     z-index: -1;
-    background-image: url("canal.webp");
-    /* The painting is nearly square, so a wide viewport must crop it
-       somewhere. Held just above centre: that keeps the rooflines and the
-       waterline both in frame, which are the two lines that make it read as
-       Amsterdam rather than as texture.
+    /* Fitted to the width and never cropped sideways. The painting is nearly
+       square, so a cover fit on a phone throws away the outer third of it —
+       and with it two of the four houses, which have to stay reachable.
 
-       The canvas reproduces this exactly at rest, then slides the 38% down
-       toward the water as --reveal rises. Change one and change the other:
-       FRAME_REST in water.js. */
-    background-size: cover;
-    background-position: center 38%;
+       That leaves it overrunning a landscape window top and bottom, and
+       falling short of a portrait one, where --surround fills the difference.
+
+       The canvas reproduces this exactly at rest, then slides the painting
+       down toward the water as --reveal rises, on screens with the room to.
+       Change one and change the other: `fit` in water.js. */
+    background-color: var(--surround);
+    background-image: url("canal.webp");
+    background-size: 100% auto;
+    background-position: center center;
     background-repeat: no-repeat;
 }
 
@@ -121,6 +133,15 @@ body {
 
 .water-on .backdrop-water {
     opacity: 1;
+}
+
+/* A house under the pointer lights up and goes somewhere, so it takes the
+   cursor that says so. On the root rather than the canvas: the canvas is
+   behind the whole page and never receives the pointer itself. water.js only
+   sets this while the pointer is over a house and clear of the column, so
+   nothing in the page is ever wearing a cursor it did not ask for. */
+.to-a-house {
+    cursor: pointer;
 }
 
 .backdrop-veil {
@@ -225,6 +246,14 @@ body {
        and leaves blue as the only colour on the page. */
     filter: grayscale(1);
     transition: transform 0.4s var(--ease);
+}
+
+/* The one portrait with a link still hidden behind it takes a cursor that
+   hints there is something to click. Keyed off the markup like secret.js is,
+   rather than off a name — and it stops matching the moment the link is out,
+   so the hint disappears along with the thing it was pointing at. */
+.person:has([data-secret][hidden]) .portrait {
+    cursor: pointer;
 }
 
 .ident {
@@ -332,8 +361,9 @@ body {
 /* --------------------------------------------------------------------------
    Past the roster
 
-   Scroll room with nothing in it. Across it the veil lifts and the water
-   starts moving, so the bottom of the page is the painting and nothing else.
+   Scroll room with nothing in it. Across it the veil lifts, the water starts
+   moving and the light goes, so the bottom of the page is the canal after
+   dark and nothing else.
 
    Both of these are inert until water.js has a working canvas to draw on:
    without one there is nothing down there to arrive at, and the tail would be
@@ -345,11 +375,12 @@ body {
 }
 
 .water-on .tail {
-    /* Enough to carry the last card off the top of the screen, plus somewhere
-       to sit and watch the water once it has gone. Shortening it does not
-       break anything — water.js caps the lift against whatever scrolling is
-       actually left. */
-    height: 120vh;
+    /* However much empty scroll it takes to give every crossfade its own
+       screenful and leave a moment to sit at the end of the day. water.js
+       works it out — the roster's height is half the sum and only it knows
+       that — and sets --tail before this class lands. The fallback is what
+       the page had before the light moved, and is only ever a frame long. */
+    height: var(--tail, 120vh);
 }
 
 /* A plumb line dropping off the last card — the only hint that the page keeps
