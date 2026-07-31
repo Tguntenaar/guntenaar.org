@@ -400,6 +400,116 @@ body {
 }
 
 /* --------------------------------------------------------------------------
+   Hints, and a signature
+
+   An arrow at the bottom middle, a line in the bottom left, and a credit that
+   has to be earned. The arrow promises more page for as long as there is any:
+   it rides --more, which water.js keeps at 1 until the last half screen of
+   scroll, and only there does it put itself away. Its ink flips to eggshell
+   once the frame goes darker than ink could survive (`after-dark`).
+
+   The bottom-left line is the riddle. It fades up as the painting is finally
+   alone, and while a house is under the pointer water.js swaps it for that
+   house's address. Showing all four puts `found-all` on the root, which is
+   what lets the signature settle in above it. Both are white with a breath of
+   shadow — the corner they live in runs from daylight water to night sky, and
+   white with a halo is the one thing that survives the whole day.
+   -------------------------------------------------------------------------- */
+
+.hint {
+    position: fixed;
+    bottom: 1.1rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    opacity: 0;
+    /* Never between a pointer and a house. */
+    pointer-events: none;
+    transition: color 0.4s var(--ease), opacity 0.4s var(--ease);
+}
+
+.hint-scroll {
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 1rem;
+    color: var(--hint-ink, rgba(20, 24, 31, 0.6));
+}
+
+.after-dark {
+    --hint-ink: rgba(239, 237, 233, 0.8);
+}
+
+.water-on .hint-scroll {
+    /* There the whole way down, gone only where the page is. Arrives late
+       enough not to crowd the masthead settling in. */
+    opacity: var(--more, 1);
+    animation: rise 0.7s var(--ease) 1.2s backwards;
+}
+
+.hint-find {
+    left: 1.15rem;
+    color: rgba(255, 255, 255, 0.94);
+    text-shadow: 0 1px 3px rgba(20, 24, 31, 0.5);
+}
+
+/* The riddle needs a pointer to answer it, so touch never sees it. */
+@media (hover: hover) and (pointer: fine) {
+    .water-on .hint-find {
+        /* The last tenth of the veil's travel: it fades up just as the
+           painting is finally alone. */
+        opacity: clamp(0, calc(var(--reveal) * 10 - 9), 1);
+    }
+
+    /* An address on show is the answer to the riddle, and reads as one. */
+    .hint-find.is-address {
+        font-weight: 500;
+    }
+
+    /* Once all four are found the riddle is spent — the line only comes back
+       to name whichever house the pointer is on. */
+    .water-on.found-all .hint-find:not(.is-address) {
+        opacity: 0;
+    }
+}
+
+.colophon {
+    position: fixed;
+    left: 1.15rem;
+    /* One line up from the riddle, so a found address reads under the name. */
+    bottom: 2.5rem;
+    margin: 0;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.94);
+    text-shadow: 0 1px 3px rgba(20, 24, 31, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.9s var(--ease), visibility 0s 0.9s;
+}
+
+.found-all .colophon {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.9s var(--ease);
+}
+
+/* The link that rides under the pointer over a house. Deliberately invisible:
+   the house lighting up is the hover state, and the browser's status bar is
+   the label. It only has to be large enough that the pointer is always inside
+   it despite the frame of lag water.js takes to move it. */
+.house-link {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+}
+
+/* --------------------------------------------------------------------------
    Desktop: the row opens out, and hover comes alive
    -------------------------------------------------------------------------- */
 
@@ -487,4 +597,66 @@ body {
         animation: none !important;
         transition-duration: 0.01ms !important;
     }
+}
+
+/* --------------------------------------------------------------------------
+   Landing auditions — reachable only from the ?dev panel
+
+   Alternative treatments of the first screen, each letting more of the
+   painting through and giving the cards a different footing on it. Switched
+   by putting look-* on <html>; the shipped landing is the absence of all of
+   them, so nothing here can touch a visitor. When one wins, fold it into the
+   rules above and delete this block.
+   -------------------------------------------------------------------------- */
+
+/* glass — the veil nearly gone, every block a pane of frosted glass. The
+   painting reads through everything; the blur is what keeps the type on it. */
+.look-glass {
+    --veil: 0.16;
+}
+
+.look-glass .masthead,
+.look-glass .person {
+    background-color: rgba(255, 255, 255, 0.44);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    backdrop-filter: blur(14px) saturate(1.2);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: var(--radius);
+}
+
+.look-glass .masthead {
+    padding: 1.35rem 1.5rem 1.55rem;
+}
+
+/* paper — postcards laid on the painting: a thinner veil, and every block an
+   opaque white card that sits visibly above the scene. */
+.look-paper {
+    --veil: 0.34;
+}
+
+.look-paper .masthead {
+    padding: 1.35rem 1.5rem 1.55rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+}
+
+.look-paper .masthead,
+.look-paper .person {
+    background-color: var(--paper);
+    box-shadow: 0 20px 44px -26px rgba(20, 24, 31, 0.5);
+}
+
+/* sheet — no veil at all: the painting at full strength, and the whole column
+   on one translucent sheet, like a letter left on the quay. */
+.look-sheet {
+    --veil: 0;
+}
+
+.look-sheet .page {
+    margin-top: clamp(1rem, 4vw, 2.25rem);
+    margin-bottom: clamp(1rem, 4vw, 2.25rem);
+    background: rgba(239, 237, 233, 0.88);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-radius: calc(var(--radius) * 1.6);
 }

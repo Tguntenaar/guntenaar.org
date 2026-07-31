@@ -7,12 +7,12 @@
    with a couple of sine waves, which is all it takes to read as moving water.
 
    On top of that it is a compositor. `layover/` holds the same 1072x1008
-   frame painted several times over — the whole scene at four times of day,
+   frame painted several times over — the whole scene at five times of day,
    one transparent layer per house holding just that building and its
    reflection, and the two things the canal has after dark that it does not
    have before — so a layer drops onto the base with no offset and no seam.
 
-   Scroll is the clock. The shader runs the four scenes as one ramp, day to
+   Scroll is the clock. The shader runs the five scenes as one ramp, day to
    night, crossfading whichever pair the page has scrolled between, and blends
    the night sky, the lit boat and any lit house over the top. All of them
    share the same distortion, which is what keeps a lit house's reflection
@@ -39,25 +39,31 @@
    `band` is what fills the screen above and below the painting at that stop —
    the mean of that painting's own brightest five per cent, which for a
    watercolour is its paper. Day's is the page's own --shell, which is where
-   that measurement came from in the first place. The last stop breaks the
-   rule and takes its night sky instead: after dark the paper is not lit, and
-   the sky is what the eye reads the picture as sitting in.
+   that measurement came from in the first place. The two night stops break
+   the rule and take their night skies instead: after dark the paper is not
+   lit, and the sky is what the eye reads the picture as sitting in.
 
-   The middle two are `optional`. A GPU short of texture units drops them and
-   the ramp runs straight from day to night, which is what this did before
-   they existed. */
+   Night comes twice: evening first, every window along the canal lit, and
+   then deep night with the lights gone out — where pointing at a house is
+   what turns its windows back on.
+
+   The middle three are `optional`. A GPU short of texture units drops them
+   and the ramp runs straight from day to night, which is what this did
+   before they existed. */
 const STOPS = [
-    {key: 'day',    src: 'canal.webp',              band: [0xef, 0xed, 0xe9]},
-    {key: 'sunny',  src: 'layover/day-sunny.webp',  band: [0xe7, 0xe4, 0xd7], optional: true},
-    {key: 'golden', src: 'layover/day-golden.webp', band: [0xf6, 0xce, 0xaf], optional: true},
-    {key: 'night',  src: 'layover/night-dark.webp', band: [0x11, 0x24, 0x46], afterDark: true},
+    {key: 'day',     src: 'canal.webp',               band: [0xef, 0xed, 0xe9]},
+    {key: 'sunny',   src: 'layover/day-sunny.webp',   band: [0xe7, 0xe4, 0xd7], optional: true},
+    {key: 'golden',  src: 'layover/day-golden.webp',  band: [0xf6, 0xce, 0xaf], optional: true},
+    {key: 'evening', src: 'layover/night-light.webp', band: [0x17, 0x26, 0x49], afterDark: true, optional: true},
+    {key: 'night',   src: 'layover/night-dark.webp',  band: [0x11, 0x24, 0x46], afterDark: true},
 ];
 
-/* Laid over the whole scene as the last crossfade runs, at whatever strength
-   it has reached: the sky the night was painted with — stars, and a moon that
-   covers over the one night-dark carries — and the tour boat with its windows
-   lit. Neither is a variant of anything and neither answers to the pointer.
-   They are simply what the canal has after dark, arriving as the dark does. */
+/* Laid over the whole scene as the dusk crossfade runs, at whatever strength
+   it has reached: the sky the nights were painted with — stars, and a moon
+   that covers over the ones the night scenes carry — and the tour boat with
+   its windows lit. Neither is a variant of anything and neither answers to
+   the pointer. They are simply what the canal has after dark, arriving as
+   the dark does and holding through both stops of it. */
 const AFTER_DARK = [
     {key: 'sky',  src: 'layover/nightsky.webp', afterDark: true},
     {key: 'boat', src: 'layover/boat.webp',     afterDark: true},
@@ -68,12 +74,15 @@ const AFTER_DARK = [
    suits the scene, so pointing at a building in daylight brings the sun out
    on it and pointing at one after dark turns the lights on.
 
-   Only two, for four scenes: the crossfade between them is the last one of
-   the ramp, so the sunny cutout stands in for every hour before dusk. That is
-   free at the first stop and at the last, and through the middle it reads as
+   Only two, for five scenes: the pair crossfades over the dusk crossfade —
+   golden into evening — so the sunny cutout stands in for every hour before
+   dusk and the lit windows hold through both stops of the night. That is
+   free at the first stop and after dark, and through the middle it reads as
    a facade still catching light the sky has already lost — but at the sunny
    stop itself there is nothing brighter to reach for, and pointing at a house
    in full sun does very little. Fixing that honestly is four more samplers.
+   At the evening stop every window is already lit, so a hovered house simply
+   matches the scene under it until the dark starts taking the lights away.
 
    The two share a silhouette to within a pixel of antialiasing, which is why
    they can be mixed as straight alpha and why either one serves as the hit
@@ -169,6 +178,7 @@ let raf = 0;
 let queued = false;
 let falling = false;   // has the dark side been asked for yet?
 let tail = -1;         // scroll room past the roster, in px
+let more = -1;         // is there page left below? 1 until the last half screen
 
 /* What the page is asking for, and what is currently on screen chasing it.
    `hour` is the whole ramp as one number: 0 at the first stop, 1 at the last,
@@ -200,17 +210,17 @@ function boot() {
     const n = v => v.toFixed(5);   // GLSL has no integer-to-float coercion
     const rgb = c => `vec3(${c.map(v => n(v / 255)).join(', ')})`;
 
-    /* Four scenes, the two things the night adds and both variants of all
-       four houses is fourteen samplers, and WebGL 1 only promises eight.
+    /* Five scenes, the two things the night adds and both variants of all
+       four houses is fifteen samplers, and WebGL 1 only promises eight.
        Everything current reports sixteen or more. Where it does not, the
        daylight house halves go first — hovering then only lights houses after
        dark, which is what this did before the sunny layers existed — and
-       below ten the two middle scenes go with them, leaving the straight
+       below eleven the three middle scenes go with them, leaving the straight
        day-to-night crossfade this had before they existed. Eight samplers is
        the floor, and that is the floor of the spec. */
     const units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
-    both  = units >= 14;
-    SCENE = STOPS.filter(s => units >= 10 || !s.optional);
+    both  = units >= 15;
+    SCENE = STOPS.filter(s => units >= 11 || !s.optional);
 
     LAYERS = [...SCENE, ...AFTER_DARK];
     HOUSES.forEach(h => { if (both) LAYERS.push(h.lit); LAYERS.push(h.dark); });
@@ -243,6 +253,7 @@ function boot() {
        it to both at once — `as` is only how a stop turns into an expression,
        a texture read in one and a constant colour in the other. */
     const LAST = SCENE.length - 1;
+    const DUSK = SCENE.findIndex(s => s.afterDark);   // the stop the dark crossfades into
     const ramp = as => SCENE.slice(1)
         .map((s, i) => `    if (t < ${n(i + 1)}) return mix(${as(SCENE[i])}, ${as(s)}, t - ${n(i)});`)
         .join('\n            ');
@@ -282,10 +293,12 @@ function boot() {
             vec2 c = uv * frame + origin;
 
             float t = clamp(hour, 0.0, 1.0) * ${n(LAST)};
-            /* The last crossfade on its own: how far into the dark the scene
+            /* The dusk crossfade on its own: how far into the dark the scene
                is, which is what the night layers and the lit windows ride on
-               and what everything before dusk sees as zero. */
-            float dark = clamp(t - ${n(LAST - 1)}, 0.0, 1.0);
+               and what everything before dusk sees as zero. It reaches one at
+               the first night stop and holds through the rest of them, so the
+               sky and the lit boat sit still while the windows go out. */
+            float dark = clamp(t - ${n(DUSK - 1)}, 0.0, 1.0);
 
             /* Off the edge of the painting: the bands above and below it.
                Tested before the water bends anything, so the waterline cannot
@@ -526,6 +539,16 @@ function sync() {
         root.style.setProperty('--reveal', reveal.toFixed(4));
     }
 
+    /* How much page is left, for the scroll arrow: 1 with a journey still to
+       go, spent over the last half screen of it. Separate from --reveal,
+       which is done by the time the roster leaves — the arrow's promise holds
+       for the whole way down. */
+    const togo = clamp01((maxScroll - scrollY) / (0.5 * innerHeight));
+    if (togo !== more) {
+        more = togo;
+        root.style.setProperty('--more', more.toFixed(4));
+    }
+
     const first = dawn();
     const day = Math.max(1, Math.min(ramp(), maxScroll - first));
     if (held === null) askHour((scrollY - first) / day);
@@ -634,6 +657,27 @@ function aim() {
     start();
 }
 
+/* The line at the foot of the screen: a riddle at rest, and the hovered
+   house's address while one is under the pointer — which is the riddle's
+   answer, four times over. Every address shown is remembered, and showing all
+   four earns the signature in the corner. */
+const hint  = document.querySelector('.hint-find');
+const RIDDLE = hint ? hint.textContent : '';
+const found = new Set();
+
+function describe() {
+    if (!hint) return;
+    if (hovered >= 0) {
+        hint.textContent = new URL(HOUSES[hovered].href).hostname;
+        hint.classList.add('is-address');
+        found.add(hovered);
+        if (found.size === HOUSES.length) root.classList.add('found-all');
+    } else {
+        hint.textContent = RIDDLE;
+        hint.classList.remove('is-address');
+    }
+}
+
 /* A house is only somewhere to click while the column is not in the way. The
    painting runs the full width of the window and the roster sits over the
    middle of it, so at the top of the page two of the four houses are behind
@@ -644,8 +688,15 @@ function overPage(target) {
     return !!target && page.contains(target);
 }
 
+/* A house that goes somewhere deserves to say so the way links do. This is a
+   real anchor kept under the pointer whenever a house is clickable, so the
+   browser's own status bar shows the address and every kind of click — plain,
+   middle, modified — behaves exactly as it would on any link. */
+const link = document.querySelector('.house-link');
+
 function offer(on) {
     root.classList.toggle('to-a-house', on);
+    if (link) link.hidden = !on;
 }
 
 let pointerQueued = false;
@@ -656,13 +707,20 @@ function onPointer(e) {
     requestAnimationFrame(() => {
         pointerQueued = false;
         const next = houseAt(clientX, clientY);
-        if (next !== hovered) { hovered = next; aim(); }
-        offer(next >= 0 && !overPage(target));
+        if (next !== hovered) { hovered = next; aim(); describe(); }
+        const open = next >= 0 && !overPage(target);
+        offer(open);
+        if (open && link) {
+            link.href = HOUSES[next].href;
+            link.style.transform = `translate(${clientX - 24}px, ${clientY - 24}px)`;
+        }
     });
 }
 
+/* The anchor handles its own clicks; this catches the frame of lag where the
+   pointer has outrun it. */
 function onClick(e) {
-    if (overPage(e.target)) return;
+    if (e.target === link || overPage(e.target)) return;
     const i = houseAt(e.clientX, e.clientY);
     if (i >= 0) location.href = HOUSES[i].href;
 }
@@ -706,8 +764,19 @@ function settle() {
    before the canvas has a texture and behind the page as it overscrolls.
    `band` here and `band` in the shader are the same ramp over the same
    constants, so the two cannot disagree. */
+let dimmed = false;
+
 function surround() {
-    root.style.setProperty('--surround', `rgb(${band(have.hour).join(' ')})`);
+    const c = band(have.hour);
+    root.style.setProperty('--surround', `rgb(${c.join(' ')})`);
+    /* Quiet ink vanishes into a dark frame, so past dusk the hints and the
+       signature turn to eggshell. A threshold rather than a ramp: the text
+       wants to be one thing or the other, never halfway. */
+    const dark = c[0] * 0.2126 + c[1] * 0.7152 + c[2] * 0.0722 < 96;
+    if (dark !== dimmed) {
+        dimmed = dark;
+        root.classList.toggle('after-dark', dark);
+    }
 }
 
 function band(v) {
@@ -791,7 +860,7 @@ calm.addEventListener('change', start);
 if (points.matches) {
     addEventListener('pointermove', onPointer, {passive: true});
     addEventListener('click', onClick);
-    document.addEventListener('pointerleave', () => { hovered = -1; offer(false); aim(); });
+    document.addEventListener('pointerleave', () => { hovered = -1; offer(false); aim(); describe(); });
 }
 
 /* A lost context leaves the drawing buffer blank, which would punch a hole in

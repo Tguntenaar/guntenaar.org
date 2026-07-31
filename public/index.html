@@ -261,6 +261,23 @@
      works, so a browser without WebGL never gets an empty screenful. -->
 <div class="tail" aria-hidden="true"></div>
 
+<!-- Guidance for the long way down. The arrow, bottom middle, promises more
+     page for as long as there is any, and puts itself away at the end of it.
+     The line in the bottom left belongs to the pointer game: water.js trades
+     its riddle for the address of whichever house is under the pointer, and
+     once all four have been shown the signature settles in above it. All
+     three are inert without the canvas, and the riddle never appears where
+     there is no pointer to answer it. -->
+<div class="hint hint-scroll" aria-hidden="true">&darr;</div>
+<div class="hint hint-find" aria-hidden="true">hover over the right address</div>
+<p class="colophon">made by Thomas</p>
+
+<!-- A real link that rides under the pointer while it is over a house, so the
+     browser's own status bar names where a click will go and a middle click
+     opens it like any other link. water.js aims it; it never exists for
+     keyboards or touch — the roster already carries every address. -->
+<a class="house-link" aria-hidden="true" tabindex="-1" hidden></a>
+
 <script type="module" src="water.js"></script>
 <script type="module" src="secret.js"></script>
 
