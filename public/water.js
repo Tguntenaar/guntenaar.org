@@ -179,6 +179,7 @@ let queued = false;
 let falling = false;   // has the dark side been asked for yet?
 let tail = -1;         // scroll room past the roster, in px
 let more = -1;         // is there page left below? 1 until the last half screen
+let frameTop = null;   // painting top edge in px, for DOM layers on the frame
 
 /* What the page is asking for, and what is currently on screen chasing it.
    `hour` is the whole ramp as one number: 0 at the first stop, 1 at the last,
@@ -194,6 +195,15 @@ const clamp01 = v => Math.min(1, Math.max(0, v));
 
 let hovered = -1;                          // house under the pointer, or -1
 const pinned = [false, false, false, false];   // held on from the dev panel
+
+/* Boris's drone: which house it answers to, where it parks — the cutout's
+   own centre, as fractions of the frame — and how big it flies, which must
+   agree with the scale in style.css. `chase` does the flying. */
+const drone = document.querySelector('.drone');
+const BORIS = HOUSES.findIndex(h => h.href === 'https://zgdrone.com/');
+const DRONE = {x: 0.4235, y: 0.0997, scale: 0.21};
+let pointer = null;            // last pointer position, in CSS px
+let droneX = 0, droneY = 0;    // eased offset from the parking spot
 
 boot();
 
@@ -549,6 +559,16 @@ function sync() {
         root.style.setProperty('--more', more.toFixed(4));
     }
 
+    /* Where the painting's top edge sits, for DOM layers that share its
+       frame — the drone. The stylesheet's own value is the centred at-rest
+       frame; this takes over the moment the reveal or a resize moves it. */
+    const {offY} = fit(cvs.clientWidth, cvs.clientHeight);
+    const edge = Math.round(offY);
+    if (edge !== frameTop) {
+        frameTop = edge;
+        root.style.setProperty('--frame-top', `${edge}px`);
+    }
+
     const first = dawn();
     const day = Math.max(1, Math.min(ramp(), maxScroll - first));
     if (held === null) askHour((scrollY - first) / day);
@@ -706,8 +726,12 @@ function onPointer(e) {
     const {clientX, clientY, target} = e;
     requestAnimationFrame(() => {
         pointerQueued = false;
+        pointer = {x: clientX, y: clientY};
         const next = houseAt(clientX, clientY);
         if (next !== hovered) { hovered = next; aim(); describe(); }
+        /* The drone chases the pointer itself, not just its arrivals, so
+           every move over Boris's house asks for a frame. */
+        if (next === BORIS) start();
         const open = next >= 0 && !overPage(target);
         offer(open);
         if (open && link) {
@@ -786,6 +810,32 @@ function band(v) {
     return SCENE[i].band.map((c, k) => Math.round(c + (SCENE[i + 1].band[k] - c) * f));
 }
 
+/* The drone, chasing. While Boris's house is under the pointer the target is
+   the pointer; anywhere else it is the parking spot in the sky. The easing is
+   deliberately behind EASE_LIT — the lag is what makes it read as something
+   airborne rather than a cursor. Runs inside the draw loop, and keeps the
+   loop alive only while there is distance left to close. */
+function chase() {
+    if (!drone) return false;
+    let tx = 0, ty = 0;
+    if (hovered === BORIS && pointer) {
+        tx = pointer.x - DRONE.x * cvs.clientWidth;
+        ty = pointer.y - (frameTop || 0) - DRONE.y * cvs.clientWidth * (imgH / imgW);
+    }
+    const k = calm.matches ? 1 : 0.08;
+    let flying = true;
+    droneX += (tx - droneX) * k;
+    droneY += (ty - droneY) * k;
+    if (Math.abs(tx - droneX) < 0.4 && Math.abs(ty - droneY) < 0.4) {
+        droneX = tx;
+        droneY = ty;
+        flying = false;
+    }
+    drone.style.transform =
+        `translate(${droneX.toFixed(1)}px, ${droneY.toFixed(1)}px) scale(${DRONE.scale})`;
+    return flying;
+}
+
 function resize() {
     /* A full-viewport fragment shader on a 3x display is a lot of pixels for
        a background. 1.75 is past the point where the ripples look soft. */
@@ -832,6 +882,7 @@ function draw(now) {
     if (target === 0 && gain < 0.0015) gain = 0;
 
     const settling = settle();
+    const flying = chase();
 
     resize();
     place();
@@ -841,7 +892,7 @@ function draw(now) {
     gl.uniform4f(U.lit, have.lit[0], have.lit[1], have.lit[2], have.lit[3]);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
-    if ((gain > 0 || settling) && !document.hidden) raf = requestAnimationFrame(draw);
+    if ((gain > 0 || settling || flying) && !document.hidden) raf = requestAnimationFrame(draw);
 }
 
 /* -------------------------------------------------------------------------
@@ -860,7 +911,13 @@ calm.addEventListener('change', start);
 if (points.matches) {
     addEventListener('pointermove', onPointer, {passive: true});
     addEventListener('click', onClick);
-    document.addEventListener('pointerleave', () => { hovered = -1; offer(false); aim(); describe(); });
+    document.addEventListener('pointerleave', () => {
+        hovered = -1;
+        pointer = null;
+        offer(false);
+        aim();
+        describe();
+    });
 }
 
 /* A lost context leaves the drawing buffer blank, which would punch a hole in

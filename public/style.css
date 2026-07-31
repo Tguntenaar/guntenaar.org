@@ -14,33 +14,31 @@
    ========================================================================== */
 
 :root {
-    /* Eggshell ground, white panels. Keeping the cards pure white gives the
-       rows something to sit on — they read as paper laid on a warm surface
-       rather than dissolving into it, which is what a single flat off-white
-       would have done. */
+    /* The landing is smoked glass: dark translucent panes over the painting,
+       with light type on them. The panes carry the legibility that the
+       eggshell veil used to, which is why the veil can sit so low. */
     /* --shell is sampled from the watercolour's own paper (its brightest 5%
        averages #efede9), so the page ground and the painting are the same
        stock and the edges of the image never announce themselves. */
     --shell: #efede9;
     --paper: #ffffff;
-    --ink:   #14181f;
+    --ink:   #f2f1ed;
     --muted: #6f7681;
 
-    /* The domains and the captions under the names are the quietest text on
-       the page and also the only part of it that does anything. The painting
-       now comes up behind them fast, so rather than hold the veil back for
-       them they darken toward the ink at the same rate it thins — the picture
-       arrives just as quickly, the links simply keep their contrast.
-
-       Declared plain first: a browser without color-mix drops the @supports
-       block and keeps flat --muted, which is what the page used to be. */
-    --muted-lift: var(--muted);
-    /* Translucent ink rather than a fixed grey: a card is transparent at rest
-       and white on hover, so its outline has to hold up over both the painting
-       and the paper. A flat hairline disappeared into the watercolour. */
-    --line:  rgba(20, 24, 31, 0.14);
-    --delft: #1e3f8f;
-    --wash:  #eff2fa;
+    /* The quietest text on the page — captions and domains — over dark glass.
+       Static: light on smoke has its contrast everywhere, so it no longer
+       needs to darken as the veil thins. */
+    --muted-lift: rgba(242, 241, 237, 0.72);
+    /* Translucent light rather than a fixed grey, so the hairlines hold up
+       over the smoke and over the open painting alike. */
+    --line:  rgba(255, 255, 255, 0.2);
+    /* Delft has no contrast against smoked glass, so the page's one colour
+       lightens — still blue, still only where something is interactive. */
+    --delft: #a9bff2;
+    --wash:  rgba(255, 255, 255, 0.09);
+    /* The glass itself, at rest and under the pointer. */
+    --smoke:      rgba(16, 22, 33, 0.44);
+    --smoke-deep: rgba(16, 22, 33, 0.62);
 
     /* What fills the screen above and below the painting, and what shows
        behind the page where it overscrolls. water.js repaints it as the scene
@@ -49,9 +47,10 @@
        texture and for a browser without WebGL, which never leaves daylight. */
     --surround: var(--shell);
 
-    /* How much eggshell sits between the painting and the text at rest. Raise
-       to favour legibility, lower to favour the picture. */
-    --veil: 0.72;
+    /* How much eggshell sits between the painting and the text at rest. The
+       smoke panes carry the legibility now; this is just a breath of paper
+       so the picture reads as printed rather than backlit. */
+    --veil: 0.1;
 
     /* 0 at the top of the page, 1 by the time the roster has scrolled past
        the top of the screen, moving the whole way down. water.js drives it;
@@ -61,12 +60,6 @@
 
     --radius: 20px;
     --ease:   cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-@supports (color: color-mix(in srgb, red, blue)) {
-    :root {
-        --muted-lift: color-mix(in srgb, var(--muted), var(--ink) calc(var(--reveal) * 100%));
-    }
 }
 
 *,
@@ -157,9 +150,46 @@ body {
     opacity: calc(1 - var(--reveal));
 }
 
+/* --------------------------------------------------------------------------
+   Boris's drone
+
+   A cutout in the painting's own 1072x1008 frame, laid over the backdrop at
+   the same framing the canvas uses — so at rest it hangs exactly where it was
+   painted, in the sky. --frame-top is where the painting's top edge sits: the
+   CSS value is the centred at-rest frame, and water.js overrides it in px
+   whenever the reveal or a resize moves the picture, which keeps the drone
+   glued to its sky.
+
+   The cutout paints the drone far larger than the scene can honestly hold,
+   so it is scaled down around its own centre — the transform-origin is the
+   drone's position in the frame — to about the width of one of the windows
+   it flies past. The scale here must agree with DRONE.scale in water.js,
+   which owns the transform while the drone is flying: point at Boris's house
+   and it chases the pointer, with the lag of something actually airborne.
+   -------------------------------------------------------------------------- */
+
+:root {
+    /* (100vh - painting height at full width) / 2 — `fit` at rest, in CSS. */
+    --frame-top: calc((100vh - 94.0299vw) * 0.5);
+}
+
+.drone {
+    position: fixed;
+    left: 0;
+    top: var(--frame-top);
+    z-index: -1;
+    width: 100vw;
+    height: auto;
+    transform-origin: 42.35% 9.97%;
+    transform: scale(0.21);
+    opacity: 0.9;
+    pointer-events: none;
+    will-change: transform;
+}
+
 .page {
     width: 100%;
-    max-width: 47rem;
+    max-width: 41rem;
     margin: 0 auto;
     padding: clamp(2.5rem, 9vw, 5.5rem) clamp(1.25rem, 5vw, 2rem) clamp(3rem, 10vw, 6rem);
 }
@@ -170,6 +200,12 @@ body {
 
 .masthead {
     margin-bottom: clamp(2.25rem, 6vw, 3.25rem);
+    padding: 1.35rem 1.5rem 1.55rem;
+    background-color: var(--smoke);
+    -webkit-backdrop-filter: blur(16px) saturate(1.1);
+    backdrop-filter: blur(16px) saturate(1.1);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: var(--radius);
 }
 
 .eyebrow {
@@ -214,13 +250,13 @@ body {
     flex-direction: column;
     gap: 1.1rem;
     padding: 1.2rem 1.15rem 1.3rem;
-    /* At rest a row is fully transparent — the painting shows straight through
-       it and only the hairline says a card is there. Hovering fades it up to
-       opaque white. Written as white-at-zero-alpha rather than `transparent`
-       so the fade cannot dip through grey on its way up, and declared here
-       rather than in :hover so it runs at the same pace on the way out. */
-    background-color: rgba(255, 255, 255, 0);
-    border: 1px solid var(--line);
+    /* A pane of smoked glass: the painting glows through the blur, and the
+       pour deepens under the pointer rather than jumping to paper. Declared
+       here rather than in :hover so it runs at the same pace on the way out. */
+    background-color: var(--smoke);
+    -webkit-backdrop-filter: blur(16px) saturate(1.1);
+    backdrop-filter: blur(16px) saturate(1.1);
+    border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: var(--radius);
     transition:
         transform        0.35s var(--ease),
@@ -542,10 +578,10 @@ body {
    hover to discover. */
 @media (hover: hover) and (pointer: fine) {
     .person:hover {
-        background-color: var(--paper);
+        background-color: var(--smoke-deep);
         transform: translateY(-2px);
-        border-color: #ccd5ea;
-        box-shadow: 0 14px 34px -16px rgba(30, 63, 143, 0.3);
+        border-color: rgba(169, 191, 242, 0.5);
+        box-shadow: 0 14px 34px -16px rgba(8, 12, 20, 0.6);
     }
 
     .person:hover .portrait {
@@ -599,64 +635,3 @@ body {
     }
 }
 
-/* --------------------------------------------------------------------------
-   Landing auditions — reachable only from the ?dev panel
-
-   Alternative treatments of the first screen, each letting more of the
-   painting through and giving the cards a different footing on it. Switched
-   by putting look-* on <html>; the shipped landing is the absence of all of
-   them, so nothing here can touch a visitor. When one wins, fold it into the
-   rules above and delete this block.
-   -------------------------------------------------------------------------- */
-
-/* glass — the veil nearly gone, every block a pane of frosted glass. The
-   painting reads through everything; the blur is what keeps the type on it. */
-.look-glass {
-    --veil: 0.16;
-}
-
-.look-glass .masthead,
-.look-glass .person {
-    background-color: rgba(255, 255, 255, 0.44);
-    -webkit-backdrop-filter: blur(14px) saturate(1.2);
-    backdrop-filter: blur(14px) saturate(1.2);
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    border-radius: var(--radius);
-}
-
-.look-glass .masthead {
-    padding: 1.35rem 1.5rem 1.55rem;
-}
-
-/* paper — postcards laid on the painting: a thinner veil, and every block an
-   opaque white card that sits visibly above the scene. */
-.look-paper {
-    --veil: 0.34;
-}
-
-.look-paper .masthead {
-    padding: 1.35rem 1.5rem 1.55rem;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-}
-
-.look-paper .masthead,
-.look-paper .person {
-    background-color: var(--paper);
-    box-shadow: 0 20px 44px -26px rgba(20, 24, 31, 0.5);
-}
-
-/* sheet — no veil at all: the painting at full strength, and the whole column
-   on one translucent sheet, like a letter left on the quay. */
-.look-sheet {
-    --veil: 0;
-}
-
-.look-sheet .page {
-    margin-top: clamp(1rem, 4vw, 2.25rem);
-    margin-bottom: clamp(1rem, 4vw, 2.25rem);
-    background: rgba(239, 237, 233, 0.88);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    border-radius: calc(var(--radius) * 1.6);
-}

@@ -89,30 +89,6 @@ export function mount(layover) {
     Object.assign(clear.style, {width: '100%', marginTop: '6px'});
     panel.append(clear);
 
-    /* ---- the landing ----
-
-       Auditions for the first screen, defined at the bottom of style.css as
-       look-* classes on <html>. `now` is the shipped landing — none of them.
-       Scroll back to the top to actually judge one. */
-
-    const looksRow = row('landing');
-    looksRow.style.marginTop = '12px';
-    panel.append(looksRow);
-
-    const LOOKS = [null, 'glass', 'paper', 'sheet'];
-    const lookChips = [];
-    const looks = el('div', {display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px'});
-    LOOKS.forEach(name => {
-        const chip = button(name || 'now', () => {
-            LOOKS.forEach(n => n && document.documentElement.classList.remove(`look-${n}`));
-            if (name) document.documentElement.classList.add(`look-${name}`);
-            paint();
-        });
-        lookChips.push(chip);
-        looks.append(chip);
-    });
-    panel.append(looks);
-
     /* Reads the state back rather than tracking it, so the panel stays honest
        when something else moves it — the console, or the page itself. */
     function paint() {
@@ -133,16 +109,6 @@ export function mount(layover) {
             chip.style.background = on ? INK : 'transparent';
             chip.style.color = on ? '#fff' : (over === i ? '#1e3f8f' : INK);
             chip.style.borderColor = on || over === i ? '#1e3f8f' : 'rgba(20,24,31,0.2)';
-        });
-
-        const cls = document.documentElement.classList;
-        lookChips.forEach((chip, i) => {
-            const on = LOOKS[i]
-                ? cls.contains(`look-${LOOKS[i]}`)
-                : !LOOKS.some(n => n && cls.contains(`look-${n}`));
-            chip.style.background = on ? INK : 'transparent';
-            chip.style.color = on ? '#fff' : INK;
-            chip.style.borderColor = on ? '#1e3f8f' : 'rgba(20,24,31,0.2)';
         });
     }
 
