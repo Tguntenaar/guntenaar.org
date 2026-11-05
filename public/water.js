@@ -1,6 +1,8 @@
+import {sceneTexture} from './scene-texture.js';
+
 /* ==========================================================================
-   water.js — the canal moves once the roster is out of the way, the day goes
-   down as you scroll, and the houses light up when you point at them
+   water.js — scroll carries the canal through the day; opening a house
+   lights its facade, while portraits stay anchored above the roofs
 
    The painting already contains its own reflection; the canal in it is a
    mirror. Nothing here draws water. It bends the pixels below the waterline
@@ -30,13 +32,18 @@
    Add ?dev to the URL for controls over all of it.
    ========================================================================== */
 
-/* The scene, in the order you scroll through it. `day` is public/canal.webp
+/* The scene, in the order you scroll through it. Each has an outpainted
+   extension: one original-frame height of extra sky and water. scene-texture.js
+   places the registered original in the middle third, and the shader remaps
+   only the base-scene coordinates. House and boat layers keep their alignment.
+
+   The original `day` is public/canal.webp
    rather than a file in layover/: the page already loads it as the CSS
    background and the still fallback, so the shader gets it for free instead
    of a second copy of the same picture. The rest come from
    tools/build_layover.py.
 
-   `band` is what fills the screen above and below the painting at that stop —
+   `band` fills any horizontal surround outside the painting at that stop —
    the mean of that painting's own brightest five per cent, which for a
    watercolour is its paper. Day's is the page's own --shell, which is where
    that measurement came from in the first place. The two night stops break
@@ -51,11 +58,11 @@
    and the ramp runs straight from day to night, which is what this did
    before they existed. */
 const STOPS = [
-    {key: 'day',     src: 'canal.webp',               band: [0xef, 0xed, 0xe9]},
-    {key: 'sunny',   src: 'layover/day-sunny.webp',   band: [0xe7, 0xe4, 0xd7], optional: true},
-    {key: 'golden',  src: 'layover/day-golden.webp',  band: [0xf6, 0xce, 0xaf], optional: true},
-    {key: 'evening', src: 'layover/night-light.webp', band: [0x17, 0x26, 0x49], afterDark: true, optional: true},
-    {key: 'night',   src: 'layover/night-dark.webp',  band: [0x11, 0x24, 0x46], afterDark: true},
+    {key: 'day', extension: 'extended/day.webp',     src: 'canal.webp',               band: [0xef, 0xed, 0xe9]},
+    {key: 'sunny', extension: 'extended/sunny.webp',   src: 'layover/day-sunny.webp',   band: [0xe7, 0xe4, 0xd7], optional: true},
+    {key: 'golden', extension: 'extended/golden.webp',  src: 'layover/day-golden.webp',  band: [0xf6, 0xce, 0xaf], optional: true},
+    {key: 'evening', extension: 'extended/evening.webp', src: 'layover/night-light.webp', band: [0x17, 0x26, 0x49], afterDark: true, optional: true},
+    {key: 'night', extension: 'extended/night.webp',   src: 'layover/night-dark.webp',  band: [0x11, 0x24, 0x46], afterDark: true},
 ];
 
 /* Laid over the whole scene as the dusk crossfade runs, at whatever strength
@@ -85,29 +92,12 @@ const AFTER_DARK = [
    matches the scene under it until the dark starts taking the lights away.
 
    The two share a silhouette to within a pixel of antialiasing, which is why
-   they can be mixed as straight alpha and why either one serves as the hit
-   mask. */
+   they can be mixed as straight alpha. */
 
-/* And where each one goes. A house that lights up under the pointer is
-   claiming to be interactive, so it is: one house per Guntenaar, in the order
-   they stand along the canal — Joost, Boris, Thomas, Olivier, left to right.
-
-   The layers are numbered in the order they were cut, not in the order they
-   stand, so this is the one place the two are reconciled. If the art is
-   recut, sort layover/houseN-sunny.webp by the left edge of its alpha bounding
-   box and renumber here; nothing else in the file cares about the order.
-
-   Every one of these addresses is also a link in the roster, so the canal is
-   an extra way to reach them and never the only way. */
-const HOMES = {
-    2: 'https://joost.guntenaar.org/',
-    1: 'https://zgdrone.com/',
-    4: 'https://thomasguntenaar.com/',
-    3: 'https://oguntenaar.com/',
-};
-
+/* The layer numbers match data-house in index.html: Joost 2, Boris 1,
+   Thomas 4 and Olivier 3. Their disclosure controls own the destinations. */
 const HOUSES = [1, 2, 3, 4].map(n => ({
-    href: HOMES[n],
+    id: n,
     lit:  {key: `s${n}`, src: `layover/house${n}-sunny.webp`},
     dark: {key: `n${n}`, src: `layover/house${n}-night-light.webp`, afterDark: true},
 }));
@@ -120,20 +110,9 @@ const HEIGHT    = 0.010;   // furthest a pixel is pushed sideways
 const SIZE      = 1.36;    // ripple frequency; lower is wider
 const SPEED     = 0.85;
 
-/* The painting is fitted to the width of the screen and never cropped
-   sideways: all four houses have to be reachable, and on a phone a cover fit
-   throws the outer two off the edges entirely.
-
-   Where that leaves it taller than the screen — any window wider than it is
-   tall, which is most of them — this is how it is framed vertically, in the
-   units background-position takes. Centred at rest, sinking toward the water
-   as the veil lifts. REST must stay in step with .backdrop's
-   `background-position` or the canvas would pop when it fades in.
-
-   Where it leaves the painting shorter than the screen, there is nothing to
-   sink into and it simply sits in the middle of its bands. */
-const FRAME_REST   = 0.50;
-const FRAME_REVEAL = 0.70;
+/* CSS owns the shared scene frame. The shader reads the same rectangle as
+   the portrait and house overlays, including on small and wide screens. */
+let sceneFrame = null;
 
 /* How much scrolling each crossfade gets, in screenfuls, and how long the
    page goes on after the last one lands. A scene wants long enough that you
@@ -151,14 +130,6 @@ const DWELL   = 0.35;
 const EASE_HOUR = 0.100;
 const EASE_LIT  = 0.150;
 
-/* The hover mask is read off each house layer's own alpha, downsampled — the
-   cutout that aligns the house with the scene doubles as its hit region, so
-   there is no second set of coordinates to keep in step with the art. A
-   quarter scale is finer than a pointer is accurate. */
-const MASK_W = 268;
-const MASK_H = 252;
-const MASK_HIT = 24;   // alpha above which a pixel counts as the house
-
 const cvs    = document.getElementById('water');
 const roster = document.querySelector('.roster');
 const page   = document.querySelector('.page');
@@ -170,16 +141,14 @@ let gl, U;
 let LAYERS = [];    // every texture the shader binds, in unit order
 let SCENE = STOPS;  // the stops this GPU has room for, in ramp order
 let both = true;    // is there room for both variants of every house?
-let imgW = 1072, imgH = 1008;
 let ready = false;
-let reveal = 0;   // 0 while the cards are on screen, 1 once they are gone
+let reveal = 0;   // first short scroll fades the veil and starts the water
 let gain   = 0;   // eased ripple strength, chasing `reveal`
 let raf = 0;
 let queued = false;
 let falling = false;   // has the dark side been asked for yet?
-let tail = -1;         // scroll room past the roster, in px
+let tail = -1;         // scroll room for the day-to-night ramp, in px
 let more = -1;         // is there page left below? 1 until the last half screen
-let frameTop = null;   // painting top edge in px, for DOM layers on the frame
 
 /* What the page is asking for, and what is currently on screen chasing it.
    `hour` is the whole ramp as one number: 0 at the first stop, 1 at the last,
@@ -194,13 +163,14 @@ let held = null;
 const clamp01 = v => Math.min(1, Math.max(0, v));
 
 let hovered = -1;                          // house under the pointer, or -1
+let previewing = false;
 const pinned = [false, false, false, false];   // held on from the dev panel
 
 /* Boris's drone: which house it answers to, where it parks — the cutout's
    own centre, as fractions of the frame — and how big it flies, which must
    agree with the scale in style.css. `chase` does the flying. */
 const drone = document.querySelector('.drone');
-const BORIS = HOUSES.findIndex(h => h.href === 'https://zgdrone.com/');
+const BORIS = HOUSES.findIndex(h => h.id === 1);
 const DRONE = {x: 0.4235, y: 0.0997, scale: 0.21};
 let pointer = null;            // last pointer position, in CSS px
 let droneX = 0, droneY = 0;    // eased offset from the parking spot
@@ -235,8 +205,8 @@ function boot() {
     LAYERS = [...SCENE, ...AFTER_DARK];
     HOUSES.forEach(h => { if (both) LAYERS.push(h.lit); LAYERS.push(h.dark); });
 
-    /* Whichever variant is always present carries the hit mask. */
-    HOUSES.forEach(h => { h.hit = both ? h.lit : h.dark; });
+    /* Preload the variant available on this GPU. */
+    HOUSES.forEach(h => { h.resident = both ? h.lit : h.dark; });
 
     const VERT = `
         attribute vec2 p;
@@ -283,12 +253,17 @@ function boot() {
         /* The scene at hour t: two texture reads while the ramp is between
            stops, one while it is sitting on either end. */
         vec3 scene(vec2 c, float t){
+            /* Extra-tall screens may exceed even the extended artwork. Fit
+               only the new sky/water to that space; never stretch houses. */
+            if (c.y < 0.0) c.y /= max(1.0, -origin.y);
+            else if (c.y > 1.0) c.y = 1.0 + (c.y - 1.0) / max(1.0, frame.y + origin.y - 1.0);
+            c.y = (c.y + 1.0) / 3.0;
             if (t <= 0.0) return texture2D(${SCENE[0].key}, c).rgb;
             ${ramp(s => `texture2D(${s.key}, c).rgb`)}
             return texture2D(${SCENE[LAST].key}, c).rgb;
         }
 
-        /* What fills the screen above and below the painting, on the same
+        /* What fills the screen beside the painting, on the same
            ramp — so the frame turns over with the picture in it. */
         vec3 band(float t){
             ${ramp(s => rgb(s.band))}
@@ -310,10 +285,9 @@ function boot() {
                sky and the lit boat sit still while the windows go out. */
             float dark = clamp(t - ${n(DUSK - 1)}, 0.0, 1.0);
 
-            /* Off the edge of the painting: the bands above and below it.
-               Tested before the water bends anything, so the waterline cannot
-               smear the picture out over its own frame. */
-            if (c.x < 0.0 || c.x > 1.0 || c.y < 0.0 || c.y > 1.0) {
+            /* Above/below the original scene is painted sky and canal now.
+               Only the horizontal surround lies outside the artwork. */
+            if (c.x < 0.0 || c.x > 1.0) {
                 gl_FragColor = vec4(band(t), 1.0);
                 return;
             }
@@ -330,21 +304,25 @@ function boot() {
                 c.y += amp * sin(c.x * f * 52.0 - w * 1.60) * 0.30;
                 c.y = max(c.y, ${n(WATERLINE)} + 0.0005);   // never pull the quay down
             }
-            c = clamp(c, 0.0, 1.0);
+            c.x = clamp(c.x, 0.0, 1.0);
+            bool originalFrame = c.y >= 0.0 && c.y <= 1.0;
+            float sceneEdge = smoothstep(0.0, 0.07, c.y) * (1.0 - smoothstep(0.92, 1.0, c.y));
 
             vec3 col = scene(c, t);
 
             /* Sky first, then the boat: the sky belongs behind everything,
                and nothing else here overlaps. Straight-alpha over, so a layer
                only touches the pixels it was painted on. */
-            if (dark > 0.0) {
+            if (dark > 0.0 && originalFrame) {
                 vec4 o;
-${AFTER_DARK.map(l => `                o = texture2D(${l.key}, c); col = mix(col, o.rgb, o.a * dark);`).join('\n')}
+${AFTER_DARK.map(l => `                o = texture2D(${l.key}, c); col = mix(col, o.rgb, o.a * dark * sceneEdge);`).join('\n')}
             }
 
             /* Then the houses, one at a time. They do not overlap either, so
                the order between them does not matter. */
+            if (originalFrame) {
 ${HOUSES.map((h, i) => house(h, 'xyzw'[i])).join('\n')}
+            }
 
             gl_FragColor = vec4(col, 1.0);
         }`;
@@ -360,11 +338,11 @@ ${HOUSES.map((h, i) => house(h, 'xyzw'[i])).join('\n')}
         return both ? `
             if (lit.${k} > 0.0) {
                 vec4 g = mix(texture2D(${h.lit.key}, c), texture2D(${h.dark.key}, c), dark);
-                col = mix(col, g.rgb, g.a * lit.${k});
+                col = mix(col, g.rgb, g.a * lit.${k} * sceneEdge);
             }` : `
             if (lit.${k} * dark > 0.0) {
                 vec4 g = texture2D(${h.dark.key}, c);
-                col = mix(col, g.rgb, g.a * lit.${k} * dark);
+                col = mix(col, g.rgb, g.a * lit.${k} * dark * sceneEdge);
             }`;
     }
 
@@ -427,25 +405,23 @@ ${HOUSES.map((h, i) => house(h, 'xyzw'[i])).join('\n')}
         if (layer.img) upload(layer);   // a restored context still has the pixels
     });
 
-    load(SCENE[0]).then(() => {
-        if (!gl) return;
+    load(SCENE[0]).then(loaded => {
+        if (!loaded || !gl) return;
         ready = true;
         cvs.style.opacity = '';
         room();   // before the tail exists, so it is never briefly the wrong length
         root.classList.add('water-on');
         sync();   // a reload part-way down the page starts already revealed
 
-        /* One variant of each house, about 57 KB, once the page is otherwise
-           done: its alpha is what the pointer is tested against, so it has to
-           be here before the first hover can do anything, and in daylight it
-           is also the one that shows.
+        /* One lighting variant of each house, about 57 KB, once the page is
+           otherwise done. Opening a house also requests it immediately.
 
            Nothing further along the ramp is in this list. The rest of the
            scenes come to about 750 KB between them and a visitor who never
            scrolls never sees one; `askHour` fetches each as the crossfade
            that ends on it begins. */
         const idle = window.requestIdleCallback || (f => setTimeout(f, 1200));
-        idle(() => HOUSES.forEach(h => load(h.hit)));
+        idle(() => HOUSES.forEach(h => load(h.resident)));
     });
 }
 
@@ -453,20 +429,29 @@ ${HOUSES.map((h, i) => house(h, 'xyzw'[i])).join('\n')}
    Layers
    ------------------------------------------------------------------------- */
 
+function readImage(src) {
+    return new Promise(done => {
+        const image = new Image();
+        image.decoding = 'async';
+        image.onload = () => done(image);
+        image.onerror = () => done(null);
+        image.src = src;
+    });
+}
+
 function load(layer) {
     if (layer.pending) return layer.pending;
-    layer.pending = new Promise(done => {
-        const im = new Image();
-        im.decoding = 'async';
-        im.onload = () => {
-            layer.img = im;
-            if (HOUSES.some(h => h.hit === layer)) mask(layer);
-            upload(layer);
-            start();
-            done(true);
-        };
-        im.onerror = () => { start(); done(false); };
-        im.src = layer.src;
+    layer.pending = Promise.all([
+        readImage(layer.src),
+        layer.extension ? readImage(layer.extension) : null,
+    ]).then(([original, extension]) => {
+        if (!original) { start(); return false; }
+        layer.img = layer.extension
+            ? sceneTexture(original, extension, gl?.getParameter(gl.MAX_TEXTURE_SIZE) || 4096)
+            : original;
+        upload(layer);
+        start();
+        return true;
     });
     return layer.pending;
 }
@@ -489,10 +474,6 @@ function dusk() {
 
 function upload(layer) {
     if (!gl || !layer.img) return;
-    if (layer.unit === 0) {
-        imgW = layer.img.naturalWidth || imgW;
-        imgH = layer.img.naturalHeight || imgH;
-    }
     gl.activeTexture(gl.TEXTURE0 + layer.unit);
     gl.bindTexture(gl.TEXTURE_2D, layer.tex);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
@@ -500,45 +481,17 @@ function upload(layer) {
     layer.uploaded = true;
 }
 
-/* The alpha channel, downsampled once, as the house's hit region. */
-function mask(layer) {
-    const c = document.createElement('canvas');
-    c.width = MASK_W;
-    c.height = MASK_H;
-    const g = c.getContext('2d');
-    g.drawImage(layer.img, 0, 0, MASK_W, MASK_H);
-    const px = g.getImageData(0, 0, MASK_W, MASK_H).data;
-    const m = new Uint8Array(MASK_W * MASK_H);
-    for (let i = 0, a = 3; i < m.length; i++, a += 4) m[i] = px[a];
-    layer.mask = m;
-}
-
 /* -------------------------------------------------------------------------
    Scroll
 
-   Two things read off the same gesture, over different distances.
-
-   The veil goes straight off the first pixel and is fully lifted by the time
-   the bottom of the roster reaches the top of the screen — so it is gone at
-   the moment the last card is.
-
-   The clock waits for it. Nothing moves until the veil is spent and the last
-   card is off the top of the screen, so the painting gets a stretch of being
-   nothing but itself, in plain daylight, before the light starts going. Then
-   a whole screen of scrolling per crossfade, so a scene arrives, holds and
-   gives way rather than flickering past.
-
-   That is most of the page's length, and it is what `room` sizes the tail
-   from — which means the tail past the roster is not somewhere to sit and
-   watch the water, it is the day going down.
-
-   Everything is measured from the live layout every time rather than cached,
-   so a font swap or a rotation cannot leave it stale, and everything is
-   capped by whatever scrolling actually exists so it still completes at the
-   bottom of the page however short it turns out to be.
+   A short scroll lifts the faint paper veil and brings in the ripples.
+   The remaining scroll travels through daylight, sunset and night. Portraits
+   and the compact masthead stay in place throughout.
    ------------------------------------------------------------------------- */
 
 function sync() {
+    if (!ready) return;
+    sceneFrame = roster.getBoundingClientRect();
     room();
     const maxScroll = Math.max(0, root.scrollHeight - innerHeight);
 
@@ -551,22 +504,12 @@ function sync() {
 
     /* How much page is left, for the scroll arrow: 1 with a journey still to
        go, spent over the last half screen of it. Separate from --reveal,
-       which is done by the time the roster leaves — the arrow's promise holds
+       which is done early in the scroll — the arrow's promise holds
        for the whole way down. */
     const togo = clamp01((maxScroll - scrollY) / (0.5 * innerHeight));
     if (togo !== more) {
         more = togo;
         root.style.setProperty('--more', more.toFixed(4));
-    }
-
-    /* Where the painting's top edge sits, for DOM layers that share its
-       frame — the drone. The stylesheet's own value is the centred at-rest
-       frame; this takes over the moment the reveal or a resize moves it. */
-    const {offY} = fit(cvs.clientWidth, cvs.clientHeight);
-    const edge = Math.round(offY);
-    if (edge !== frameTop) {
-        frameTop = edge;
-        root.style.setProperty('--frame-top', `${edge}px`);
     }
 
     const first = dawn();
@@ -575,31 +518,18 @@ function sync() {
     start();
 }
 
-/* Where the roster ends, in the page's own coordinates. */
-function gone() {
-    return roster.getBoundingClientRect().bottom + scrollY;
-}
-
-/* Where the light starts moving: once the cards have left, with a screenful
-   as the floor so a window taller than the roster still gets its moment of
-   plain day. Below this the scene sits on the first stop. */
-function dawn() {
-    return Math.max(SCREENS * innerHeight, gone());
-}
+/* A short daylight pause before the scroll carries the canal into evening.
+   The roster is fixed now; its document bottom cannot measure scroll travel. */
+function gone() { return innerHeight * .35; }
+function dawn() { return gone(); }
 
 /* The scroll the day itself wants, once it starts: one screen per crossfade. */
 function ramp() {
     return SCREENS * (SCENE.length - 1) * innerHeight;
 }
 
-/* And the empty scroll it takes to have all of that — the wait, the day, and
-   a moment to sit at the end of it, less however much the page itself already
-   provides.
-
-   Set from here rather than written in the stylesheet because most of it is
-   not knowable in vh: the roster's own height is not, and it is the
-   difference between a phone and a desktop. Written only when it actually
-   changes, so a scroll frame is not laying the page out twice for nothing. */
+/* Leave one screen per available crossfade and a short pause at night.
+   Compute this from the GPU's scene count, rather than a fixed CSS height. */
 function room() {
     const need = Math.max(0, Math.round(
         dawn() + ramp() + (DWELL + 1) * innerHeight - page.offsetHeight));
@@ -647,106 +577,31 @@ function onScroll() {
     requestAnimationFrame(() => { queued = false; sync(); });
 }
 
-/* -------------------------------------------------------------------------
-   Pointing at a house
-
-   Screen to painting is the same mapping the shader does, run backwards. The
-   ripple below the waterline is under a pixel of displacement at this scale,
-   so the hit test ignores it and reads the undistorted position.
-   ------------------------------------------------------------------------- */
-
-function locate(clientX, clientY) {
-    /* CSS pixels rather than device pixels — `fit` is a ratio either way. */
-    const {dw, dh, offX, offY} = fit(cvs.clientWidth, cvs.clientHeight);
-    return {u: (clientX - offX) / dw, v: (clientY - offY) / dh};
-}
-
-function houseAt(clientX, clientY) {
-    const {u, v} = locate(clientX, clientY);
-    if (u < 0 || u >= 1 || v < 0 || v >= 1) return -1;
-    const i = ((v * MASK_H) | 0) * MASK_W + ((u * MASK_W) | 0);
-    for (let k = 0; k < HOUSES.length; k++) {
-        const m = HOUSES[k].hit.mask;
-        if (m && m[i] > MASK_HIT) return k;
-    }
-    return -1;
-}
-
+/* Houses are native disclosure controls in houses.js. Their active state
+   drives the painted facade too; mouse, keyboard and touch share one path. */
 function aim() {
     for (let i = 0; i < HOUSES.length; i++) want.lit[i] = pinned[i] || hovered === i ? 1 : 0;
     start();
 }
 
-/* The line at the foot of the screen: a riddle at rest, and the hovered
-   house's address while one is under the pointer — which is the riddle's
-   answer, four times over. Every address shown is remembered, and showing all
-   four earns the signature in the corner. */
-const hint  = document.querySelector('.hint-find');
-const RIDDLE = hint ? hint.textContent : '';
 const found = new Set();
-
-function describe() {
-    if (!hint) return;
+document.addEventListener('housechange', ({detail}) => {
+    previewing = !!detail.preview;
+    hovered = HOUSES.findIndex(h => h.id === detail.house);
     if (hovered >= 0) {
-        hint.textContent = new URL(HOUSES[hovered].href).hostname;
-        hint.classList.add('is-address');
-        found.add(hovered);
-        if (found.size === HOUSES.length) root.classList.add('found-all');
-    } else {
-        hint.textContent = RIDDLE;
-        hint.classList.remove('is-address');
-    }
-}
-
-/* A house is only somewhere to click while the column is not in the way. The
-   painting runs the full width of the window and the roster sits over the
-   middle of it, so at the top of the page two of the four houses are behind
-   cards — and there the card is the thing you are pointing at. The lighting is
-   left alone either way: it is the painting responding to the pointer, and it
-   reads as that through a card the same as beside one. */
-function overPage(target) {
-    return !!target && page.contains(target);
-}
-
-/* A house that goes somewhere deserves to say so the way links do. This is a
-   real anchor kept under the pointer whenever a house is clickable, so the
-   browser's own status bar shows the address and every kind of click — plain,
-   middle, modified — behaves exactly as it would on any link. */
-const link = document.querySelector('.house-link');
-
-function offer(on) {
-    root.classList.toggle('to-a-house', on);
-    if (link) link.hidden = !on;
-}
-
-let pointerQueued = false;
-function onPointer(e) {
-    if (pointerQueued) return;
-    pointerQueued = true;
-    const {clientX, clientY, target} = e;
-    requestAnimationFrame(() => {
-        pointerQueued = false;
-        pointer = {x: clientX, y: clientY};
-        const next = houseAt(clientX, clientY);
-        if (next !== hovered) { hovered = next; aim(); describe(); }
-        /* The drone chases the pointer itself, not just its arrivals, so
-           every move over Boris's house asks for a frame. */
-        if (next === BORIS) start();
-        const open = next >= 0 && !overPage(target);
-        offer(open);
-        if (open && link) {
-            link.href = HOUSES[next].href;
-            link.style.transform = `translate(${clientX - 24}px, ${clientY - 24}px)`;
+        if (!previewing) {
+            found.add(hovered);
+            if (found.size === HOUSES.length) root.classList.add('found-all');
         }
-    });
-}
+        if (gl && HOUSES[hovered].resident) load(HOUSES[hovered].resident);
+    }
+    aim();
+});
 
-/* The anchor handles its own clicks; this catches the frame of lag where the
-   pointer has outrun it. */
-function onClick(e) {
-    if (e.target === link || overPage(e.target)) return;
-    const i = houseAt(e.clientX, e.clientY);
-    if (i >= 0) location.href = HOUSES[i].href;
+function onPointer({clientX, clientY, pointerType}) {
+    if (pointerType === 'touch') return;
+    pointer = {x: clientX, y: clientY};
+    if (hovered === BORIS) start();
 }
 
 /* -------------------------------------------------------------------------
@@ -777,7 +632,7 @@ function settle() {
     have.hour = step(have.hour, Math.min(want.hour, reach()), EASE_HOUR);
     if (have.hour !== was) surround();
     for (let i = 0; i < HOUSES.length; i++) {
-        const shown = HOUSES[i].hit.uploaded ? want.lit[i] : 0;
+        const shown = HOUSES[i].resident.uploaded ? want.lit[i] : 0;
         have.lit[i] = step(have.lit[i], shown, EASE_LIT);
     }
     return moving;
@@ -818,9 +673,10 @@ function band(v) {
 function chase() {
     if (!drone) return false;
     let tx = 0, ty = 0;
-    if (hovered === BORIS && pointer) {
-        tx = pointer.x - DRONE.x * cvs.clientWidth;
-        ty = pointer.y - (frameTop || 0) - DRONE.y * cvs.clientWidth * (imgH / imgW);
+    if (hovered === BORIS && pointer && !previewing) {
+        const {dw, dh, offX, offY} = fit(cvs.clientWidth, cvs.clientHeight);
+        tx = pointer.x - offX - DRONE.x * dw;
+        ty = pointer.y - offY - DRONE.y * dh;
     }
     const k = calm.matches ? 1 : 0.08;
     let flying = true;
@@ -849,18 +705,12 @@ function resize() {
     }
 }
 
-/* Where the painting sits, in device pixels: the canvas equivalent of
-   `background-size: 100% auto` with the vertical position sliding from
-   FRAME_REST to FRAME_REVEAL. The one place the framing is decided — `locate`
-   runs it backwards, and the two must not drift apart. */
+/* Convert the CSS scene rectangle into canvas device pixels. */
 function fit(w, h) {
-    const scale = w / imgW;              // fit the width, crop nothing sideways
-    const dw = w, dh = imgH * scale;
-    const room = h - dh;
-    /* Only somewhere to sink if the painting overruns the screen. Where it
-       does not, it sits in the middle of its bands and stays there. */
-    const posY = room < 0 ? FRAME_REST + (FRAME_REVEAL - FRAME_REST) * reveal : 0.5;
-    return {dw, dh, offX: (w - dw) * 0.5, offY: room * posY};
+    const frame = sceneFrame || roster.getBoundingClientRect();
+    const sx = w / cvs.clientWidth, sy = h / cvs.clientHeight;
+    return {dw: frame.width * sx, dh: frame.height * sy,
+        offX: frame.left * sx, offY: frame.top * sy};
 }
 
 function place() {
@@ -874,9 +724,8 @@ function draw(now) {
     raf = 0;
     if (!ready) return;
 
-    /* Ripples fade in with the veil, so the water is never caught moving
-       under a page of cards. Reduced motion holds them at zero — the painting
-       still comes forward, it just does not move. */
+    /* Ripples arrive as the veil lifts. Reduced motion still changes the
+       time of day, but keeps the water still. */
     const target = calm.matches ? 0 : reveal;
     gain += (target - gain) * 0.06;
     if (target === 0 && gain < 0.0015) gain = 0;
@@ -905,19 +754,9 @@ addEventListener('orientationchange', onScroll);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) start(); });
 calm.addEventListener('change', start);
 
-/* Pointer devices only. Without hover there is nothing to say a house is
-   interactive before you touch it, and a tap on the backdrop that navigated
-   somewhere unannounced would be a trap. */
 if (points.matches) {
     addEventListener('pointermove', onPointer, {passive: true});
-    addEventListener('click', onClick);
-    document.addEventListener('pointerleave', () => {
-        hovered = -1;
-        pointer = null;
-        offer(false);
-        aim();
-        describe();
-    });
+    document.addEventListener('pointerleave', () => { pointer = null; start(); });
 }
 
 /* A lost context leaves the drawing buffer blank, which would punch a hole in
@@ -951,7 +790,7 @@ export const layover = {
     getHour()   { return want.hour; },
     follow()    { held = null; sync(); },
     held()      { return held !== null; },
-    pin(i, on)  { pinned[i] = !!on; load(HOUSES[i].hit); aim(); },
+    pin(i, on)  { pinned[i] = !!on; load(HOUSES[i].resident); aim(); },
     pinned()    { return pinned.slice(); },
     hovered()   { return hovered; },
     bothVariants() { return both; },

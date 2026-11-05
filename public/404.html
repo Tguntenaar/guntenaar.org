@@ -8,38 +8,28 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Caveat:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 
     <link rel="preconnect" href="https://us-assets.i.posthog.com">
     <script defer src="analytics.js"></script>
 </head>
-<body>
+<body class="not-found">
 
 <!-- The still half of the index's backdrop: painting and veil, no canvas.
      A dead end is not somewhere to go looking at the water. -->
 <div class="backdrop" aria-hidden="true">
+    <div class="backdrop-still"></div>
     <div class="backdrop-veil"></div>
 </div>
 
 <div class="page">
-    <header class="masthead">
+    <header class="masthead paper">
         <p class="eyebrow">guntenaar.org</p>
         <h1>Nothing here.</h1>
         <p class="lede">That page doesn&rsquo;t exist. The list of Guntenaars does.</p>
+        <a class="dest" href="/"><span>Back to the canal</span></a>
     </header>
-
-    <ul class="roster">
-        <li class="person">
-            <div class="dests">
-                <a class="dest" href="/">
-                    <span class="dest-label">guntenaar.org</span>
-                    <span class="route" aria-hidden="true"></span>
-                    <span class="arrow" aria-hidden="true">&rarr;</span>
-                </a>
-            </div>
-        </li>
-    </ul>
 </div>
 
 </body>

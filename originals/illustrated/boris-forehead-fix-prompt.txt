@@ -1,0 +1,4 @@
+Built-in image_gen tool; transparent_background: true
+Edit target: originals/illustrated/boris.png (previous version backed up as boris-before-forehead-fix.png).
+
+Use case: precise-object-edit. Edit target: the supplied transparent ink-and-watercolor portrait of Boris. Make exactly one tiny correction: remove the dark brown dot/birthmark in the middle-right of his forehead, just above the eyebrows. Replace that small mark with the natural adjacent peach watercolor skin wash and paper-like texture. Preserve everything else as closely as possible: same man's exact identity, facial proportions, hair, beard, eyes, smiling expression, three-quarter pose, jacket, turtleneck, all brush strokes, framing and ragged watercolor cutout edge. Do not redraw or restyle the portrait. No other facial retouching. Preserve the genuinely transparent background and original square framing. No new marks on the forehead, no text, no background.

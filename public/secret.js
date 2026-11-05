@@ -23,7 +23,7 @@ for (const person of document.querySelectorAll(".person")) {
   const portrait = person.querySelector(".portrait");
   if (!secrets.length || !portrait) continue;
 
-  const id = portrait.getAttribute("src");
+  const id = portrait.dataset.original || portrait.getAttribute("src");
 
   if (unlocked.has(id)) {
     secrets.forEach((el) => el.removeAttribute("hidden"));

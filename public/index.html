@@ -34,7 +34,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Caveat:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 
     <link rel="preconnect" href="https://us-assets.i.posthog.com">
@@ -133,161 +133,112 @@
     </script>
 </head>
 <body>
-
-<!-- The painting, on its own fixed layer under everything: a still CSS
-     background, the same frame on a canvas with the canal moving, and the
-     eggshell veil over both. See water.js. -->
 <div class="backdrop" aria-hidden="true">
+    <div class="backdrop-still"></div>
     <canvas class="backdrop-water" id="water"></canvas>
     <div class="backdrop-veil"></div>
 </div>
-
-<!-- Boris's drone, parked in the painting's sky at the width of one of the
-     windows it flies past. Point at his house — the one that goes to
-     zgdrone.com — and it takes off after the pointer, trailing it with the
-     lag of something actually airborne; let go and it settles back onto its
-     patch of sky. water.js flies it. -->
 <img class="drone" src="layover/drone-geldersekade-sky.webp" alt=""
      width="1072" height="1008" aria-hidden="true" decoding="async">
 
-<div class="page">
+<main class="page">
+    <h1 class="sr-only">The Guntenaars</h1>
+    <img class="family-crest" src="heraldry/canal-house-mark.webp" width="480" height="480"
+         alt="Guntenaar family coat of arms" decoding="async">
 
-    <header class="masthead">
-        <p class="eyebrow">guntenaar.org</p>
-        <h1>Four Guntenaars.</h1>
-        <p class="lede">
-            A photographer, an accountant with a drone company, and two engineers.
-            Pick whoever you came for.
-        </p>
-    </header>
-
-    <ul class="roster">
-
-        <li class="person">
-            <div class="who">
-                <img class="portrait" src="portraits/joost.webp" width="400" height="400"
-                     alt="Joost Guntenaar" decoding="async">
-                <div class="ident">
-                    <h2 class="name">Joost</h2>
+    <ul class="roster" aria-label="The four Guntenaars and their houses">
+        <li class="person" data-house="2" id="joost"
+            style="--x: 20.52%; --roof: 16.87%; --house-width: 9.89%; --house-height: 33.53%">
+            <details class="home">
+                <summary class="house-toggle" aria-label="Joost — show websites">
+                    <span class="house-indicator" aria-hidden="true"></span>
+                    <span class="portrait-marker">
+                        <img class="portrait" src="portraits/joost-drawn.webp" width="400" height="400"
+                             alt="" decoding="async" data-original="portraits/joost.webp">
+                        <span class="name">Joost</span>
+                    </span>
+                </summary>
+                <div class="house-info paper">
+                    <h2>Joost</h2>
                     <p class="craft">Photography</p>
+                    <div class="dests">
+                        <a class="dest" href="https://joost.guntenaar.org/"><span>joost.guntenaar.org</span></a>
+                        <a class="dest" href="https://joostguntenaar.com/"><span>joostguntenaar.com</span></a>
+                    </div>
                 </div>
-            </div>
-            <div class="dests">
-                <a class="dest" href="https://joost.guntenaar.org/">
-                    <span class="dest-label">joost.guntenaar.org</span>
-                    <span class="route" aria-hidden="true"></span>
-                    <span class="arrow" aria-hidden="true">&rarr;</span>
-                </a>
-                <a class="dest" href="https://joostguntenaar.com/">
-                    <span class="dest-label">joostguntenaar.com</span>
-                    <span class="route" aria-hidden="true"></span>
-                    <span class="arrow" aria-hidden="true">&rarr;</span>
-                </a>
-            </div>
+            </details>
         </li>
-
-        <li class="person">
-            <div class="who">
-                <img class="portrait" src="portraits/boris.webp" width="400" height="400"
-                     alt="Boris Guntenaar" decoding="async">
-                <div class="ident">
-                    <h2 class="name">Boris</h2>
+        <li class="person" data-house="1" id="boris"
+            style="--x: 39.88%; --roof: 23.12%; --house-width: 10.35%; --house-height: 26.98%">
+            <details class="home">
+                <summary class="house-toggle" aria-label="Boris — show websites">
+                    <span class="house-indicator" aria-hidden="true"></span>
+                    <span class="portrait-marker">
+                        <img class="portrait" src="portraits/boris-drawn.webp" width="400" height="400"
+                             alt="" decoding="async" data-original="portraits/boris.webp">
+                        <span class="name">Boris</span>
+                    </span>
+                </summary>
+                <div class="house-info paper">
+                    <h2>Boris</h2>
                     <p class="craft">Accounting &amp; drones</p>
+                    <div class="dests">
+                        <a class="dest" href="https://borisguntenaar.com/"><span>borisguntenaar.com</span></a>
+                        <a class="dest" href="https://zgdrone.com/"><span>zgdrone.com</span></a>
+                    </div>
                 </div>
-            </div>
-            <div class="dests">
-                <a class="dest" href="https://borisguntenaar.com/">
-                    <span class="dest-label">borisguntenaar.com</span>
-                    <span class="route" aria-hidden="true"></span>
-                    <span class="arrow" aria-hidden="true">&rarr;</span>
-                </a>
-                <a class="dest" href="https://zgdrone.com/">
-                    <span class="dest-label">zgdrone.com</span>
-                    <span class="route" aria-hidden="true"></span>
-                    <span class="arrow" aria-hidden="true">&rarr;</span>
-                </a>
-            </div>
+            </details>
         </li>
-
-        <li class="person">
-            <div class="who">
-                <img class="portrait" src="portraits/thomas.webp" width="400" height="400"
-                     alt="Thomas Guntenaar" decoding="async">
-                <div class="ident">
-                    <h2 class="name">Thomas</h2>
+        <li class="person" data-house="4" id="thomas"
+            style="--x: 48.51%; --roof: 27.68%; --house-width: 7.65%; --house-height: 24.4%">
+            <details class="home">
+                <summary class="house-toggle" aria-label="Thomas — show websites">
+                    <span class="house-indicator" aria-hidden="true"></span>
+                    <span class="portrait-marker">
+                        <img class="portrait" src="portraits/thomas-drawn.webp" width="400" height="400"
+                             alt="" decoding="async" data-original="portraits/thomas.webp">
+                        <span class="name">Thomas</span>
+                    </span>
+                </summary>
+                <div class="house-info paper">
+                    <h2>Thomas</h2>
                     <p class="craft">Software engineering</p>
+                    <div class="dests">
+                        <a class="dest" href="https://thomasguntenaar.com/"><span>thomasguntenaar.com</span></a>
+                        <a class="dest" href="https://geforcy.com/" hidden data-secret><span>geforcy.com</span></a>
+                    </div>
                 </div>
-            </div>
-            <div class="dests">
-                <a class="dest" href="https://thomasguntenaar.com/">
-                    <span class="dest-label">thomasguntenaar.com</span>
-                    <span class="route" aria-hidden="true"></span>
-                    <span class="arrow" aria-hidden="true">&rarr;</span>
-                </a>
-                <!-- Kept out of the page until his portrait is clicked three
-                     times. `hidden` rather than a class so it is out of the
-                     tab order and the accessibility tree too — a secret you
-                     can reach by pressing Tab is not a secret. -->
-                <a class="dest" href="https://geforcy.com/" hidden data-secret>
-                    <span class="dest-label">geforcy.com</span>
-                    <span class="route" aria-hidden="true"></span>
-                    <span class="arrow" aria-hidden="true">&rarr;</span>
-                </a>
-            </div>
+            </details>
         </li>
-
-        <li class="person">
-            <div class="who">
-                <img class="portrait" src="portraits/olivier.webp" width="400" height="400"
-                     alt="Olivier Guntenaar" decoding="async">
-                <div class="ident">
-                    <h2 class="name">Olivier</h2>
+        <li class="person" data-house="3" id="olivier"
+            style="--x: 85.49%; --roof: 22.42%; --house-width: 9.79%; --house-height: 28.97%">
+            <details class="home">
+                <summary class="house-toggle" aria-label="Olivier — show websites">
+                    <span class="house-indicator" aria-hidden="true"></span>
+                    <span class="portrait-marker">
+                        <img class="portrait" src="portraits/olivier-drawn.webp" width="400" height="400"
+                             alt="" decoding="async" data-original="portraits/olivier.webp">
+                        <span class="name">Olivier</span>
+                    </span>
+                </summary>
+                <div class="house-info paper">
+                    <h2>Olivier</h2>
                     <p class="craft">Software engineering</p>
+                    <div class="dests">
+                        <a class="dest" href="https://oguntenaar.com/"><span>oguntenaar.com</span></a>
+                        <a class="dest" href="https://speable.com/"><span>speable.com</span></a>
+                    </div>
                 </div>
-            </div>
-            <div class="dests">
-                <a class="dest" href="https://oguntenaar.com/">
-                    <span class="dest-label">oguntenaar.com</span>
-                    <span class="route" aria-hidden="true"></span>
-                    <span class="arrow" aria-hidden="true">&rarr;</span>
-                </a>
-                <a class="dest" href="https://speable.com/">
-                    <span class="dest-label">speable.com</span>
-                    <span class="route" aria-hidden="true"></span>
-                    <span class="arrow" aria-hidden="true">&rarr;</span>
-                </a>
-            </div>
+            </details>
         </li>
-
     </ul>
-
-    <div class="plumb" aria-hidden="true"></div>
-
-</div>
-
-<!-- Scroll room past the roster. Zero height until water.js says the canvas
-     works, so a browser without WebGL never gets an empty screenful. -->
+</main>
 <div class="tail" aria-hidden="true"></div>
-
-<!-- Guidance for the long way down. The arrow, bottom middle, promises more
-     page for as long as there is any, and puts itself away at the end of it.
-     The line in the bottom left belongs to the pointer game: water.js trades
-     its riddle for the address of whichever house is under the pointer, and
-     once all four have been shown the signature settles in above it. All
-     three are inert without the canvas, and the riddle never appears where
-     there is no pointer to answer it. -->
-<div class="hint hint-scroll" aria-hidden="true">&darr;</div>
-<div class="hint hint-find" aria-hidden="true">hover over the right address</div>
+<div class="hint hint-scroll" aria-hidden="true">scroll <span>↓</span></div>
 <p class="colophon">made by Thomas</p>
 
-<!-- A real link that rides under the pointer while it is over a house, so the
-     browser's own status bar names where a click will go and a middle click
-     opens it like any other link. water.js aims it; it never exists for
-     keyboards or touch — the roster already carries every address. -->
-<a class="house-link" aria-hidden="true" tabindex="-1" hidden></a>
-
+<script type="module" src="houses.js"></script>
 <script type="module" src="water.js"></script>
 <script type="module" src="secret.js"></script>
-
 </body>
 </html>

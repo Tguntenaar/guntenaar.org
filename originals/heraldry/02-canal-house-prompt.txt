@@ -1,0 +1,15 @@
+Mode: built-in image_gen (no CLI fallback).
+Reference 1: public/canal.webp — drawing style.
+Reference 2: user-supplied Amsterdam coat of arms screenshot — heraldry inspiration.
+Generated source: /Users/thomasguntenaar/.codex/generated_images/01a1acec-0dfe-71a2-ae30-2ee0f908fbd2/exec-840136af-7d39-4070-9cbc-476a1e2e3ec3.png
+Transparent background: true
+
+Final prompt:
+Use case: logo-brand.
+Asset type: one transparent illustrated family coat of arms for the Guntenaar family's Amsterdam canal website.
+Input images: Image 1 is the precise drawing style reference: delicate irregular dark sepia/graphite ink outlines, restrained cross-hatching, translucent muted watercolor, paper-grain within the painted shapes, dusty brick, warm ochre, slate blue, soft sage. Image 2 is a composition/heraldry reference for Amsterdam's coat of arms. Create a NEW standalone crest, not a sheet of options, in the actual delicate drawing style of Image 1.
+Concept: "Canal House" — distinctly architectural, personal and warm rather than an imperial royal emblem. Central compact traditional shield with dusty brick-red field and a narrow charcoal vertical stripe. On the stripe EXACTLY THREE ivory white saltire X-shaped crosses vertically stacked, clear and separate. Four different, exquisitely drawn Amsterdam canal-house gables form the crown above the shield, clearly four adjacent rooftops inspired by Image 1, not an imperial crown. Around the shield, use two modest hand-drawn warm ochre lions as supporters, restrained architectural curves and a few gentle canal-water ripples beneath.
+The professions must be intelligibly embedded as small engraved escutcheon panels in the four corners of the red shield, framing the triple-cross central stripe: upper left a vintage camera for Joost photography; upper right an open accounting ledger and tiny quadcopter silhouette together for Boris accounting and drones; lower left simple code angle brackets with a slash for Thomas software engineering; lower right a small microchip for Olivier software engineering. Exactly those four small profession emblems, unified drawn ink line weight, sufficient space around each.
+Below, a small gently curved cream parchment ribbon reads exactly "GUNTENAAR" in understated hand-inked serif capitals, spelled G U N T E N A A R. No other text or motto.
+Composition: whole isolated crest centered in a square image with generous transparent margin around every edge; softly restrained harmonious detail, symmetrical overall but naturally hand drawn. Warm human watercolor character. True transparent background outside artwork, never a solid white rectangular background and never a checkerboard painted into the image.
+Avoid slick vector style, metallic 3D, photorealism, bold saturated red, excessive decorative clutter, large landscape backdrop, extra crosses, extra text, cropped edges.
