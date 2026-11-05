@@ -10,7 +10,7 @@
     --surround: var(--shell);
     --reveal: 0;
     --ease: cubic-bezier(.22, .61, .36, 1);
-    --scene-width: min(100vw, 160svh);
+    --scene-width: 100vw;
     --scene-height: calc(var(--scene-width) * 1008 / 1072);
     --extension-height: max(calc(var(--scene-height) * 3), 100svh);
     --frame-left: calc((100vw - var(--scene-width)) / 2);

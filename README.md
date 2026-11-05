@@ -72,6 +72,8 @@ A short initial scroll fades the veil and introduces the ripples, followed by
 one screen per crossfade and a brief hold at night.
 
 CSS owns `--scene-width`, `--scene-height`, `--frame-left` and `--frame-top`.
+The scene fills the viewport width, including landscape screens, so no solid
+side bands appear. Wider screens crop more of the water below the houses.
 The background, house controls and drone all use those variables. The shader
 reads the roster rectangle to use exactly the same frame. This keeps every
 portrait attached to its house during resizing and scrolling.
