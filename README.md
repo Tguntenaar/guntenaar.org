@@ -72,8 +72,10 @@ A short initial scroll fades the veil and introduces the ripples, followed by
 one screen per crossfade and a brief hold at night.
 
 CSS owns `--scene-width`, `--scene-height`, `--frame-left` and `--frame-top`.
-The scene fills the viewport width, including landscape screens, so no solid
-side bands appear. Wider screens crop more of the water below the houses.
+The original scene is at most one viewport-height wide. Desktop screens show
+the canal and its reflections, with newly painted houses filling the sides
+instead of zooming into the original. Portrait screens keep the extra sky
+and water above and below.
 The background, house controls and drone all use those variables. The shader
 reads the roster rectangle to use exactly the same frame. This keeps every
 portrait attached to its house during resizing and scrolling.
@@ -86,13 +88,19 @@ Without WebGL the still painting and all house disclosures remain usable;
 
 `originals/extended/*.png` contains the vertically outpainted scenes, with
 new sky above and open water below. `public/extended/*.webp` ships them at
-1072×3024. `scene-texture.js` builds each scene texture once when it loads:
-the original occupies the middle third, with the sky/water margins softly
-blended into the new painting. The house artwork and its coordinates are
-preserved. This uses the same number of texture units as before; extension
-images are loaded alongside their scene rather than all at page load.
-The shader also ripples the extended water, and softly blends the overlay
-edges. The still fallback uses the same extended daylight art.
+1072×3024. `originals/panorama/` contains five horizontally extended scenes
+and their exact generation prompts, made with the built-in image generation
+tool. `public/panorama/*.webp` contains their web exports (about 1.8 MB total).
+
+`scene-texture.js` builds each scene texture once when it loads. The original
+occupies the central cell of a 3×3 canvas, with its vertical extension behind
+it and the registered panoramic drawing filling the sides. Soft masks blend
+the boundaries. The house artwork and its coordinates are preserved. Texture
+resolution is capped to the initial rendered frame and device pixel density
+to limit memory on phones. This uses the same number of texture units as
+before; extension images load alongside their scene rather than all at page
+load. The shader ripples the new water as well, and blends the overlay edges.
+The CSS still fallback uses the same three daylight layers.
 
 `layover/` contains painted source PNGs; `tools/build_layover.py` creates the
 WebP scene and lighting layers in `public/layover/`. All layers share the same

@@ -10,12 +10,13 @@
     --surround: var(--shell);
     --reveal: 0;
     --ease: cubic-bezier(.22, .61, .36, 1);
-    --scene-width: 100vw;
+    --scene-width: min(100vw, 100svh);
     --scene-height: calc(var(--scene-width) * 1008 / 1072);
     --extension-height: max(calc(var(--scene-height) * 3), 100svh);
     --frame-left: calc((100vw - var(--scene-width)) / 2);
     --frame-top: max(calc((100svh - var(--scene-height)) / 2), calc(150px - var(--scene-width) * .12));
     --portrait-size: clamp(64px, 8vw, 112px);
+    --panorama-width: max(100vw, calc(var(--scene-width) * 2.611));
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -30,9 +31,18 @@ body {
     position: fixed;
     inset: 0;
     z-index: -2;
-    background: var(--surround) url('extended/day.webp') no-repeat;
-    background-size: var(--scene-width) var(--extension-height);
-    background-position: var(--frame-left) calc(var(--frame-top) + (var(--scene-height) - var(--extension-height)) / 2);
+    background: var(--surround) url('panorama/day.webp') no-repeat;
+    background-size: var(--panorama-width) calc(var(--scene-height) * 2.612);
+    background-position: calc(50% - var(--scene-width) * .0025) calc(var(--frame-top) - var(--scene-height) * .960);
+}
+.backdrop-extension {
+    position: absolute;
+    left: var(--frame-left);
+    top: calc(var(--frame-top) + (var(--scene-height) - var(--extension-height)) / 2);
+    width: var(--scene-width);
+    height: var(--extension-height);
+    background: url('extended/day.webp') center / 100% 100%;
+    mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
 }
 .backdrop-still {
     position: absolute;
@@ -41,7 +51,9 @@ body {
     width: var(--scene-width);
     height: var(--scene-height);
     background: url('canal.webp') center / 100% 100%;
-    mask-image: linear-gradient(to bottom, transparent, #000 7%, #000 92%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 7%, #000 92%, transparent),
+        linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+    mask-composite: intersect;
 }
 .backdrop-water { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; }
 .water-on .backdrop-water { opacity: 1; }

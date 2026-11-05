@@ -32,10 +32,10 @@ import {sceneTexture} from './scene-texture.js';
    Add ?dev to the URL for controls over all of it.
    ========================================================================== */
 
-/* The scene, in the order you scroll through it. Each has an outpainted
-   extension: one original-frame height of extra sky and water. scene-texture.js
-   places the registered original in the middle third, and the shader remaps
-   only the base-scene coordinates. House and boat layers keep their alignment.
+/* The scene, in the order you scroll through it. Each has extra sky and water
+   in extended/ and a wider canal street in panorama/. scene-texture.js puts
+   the registered original in the central cell of a 3×3 canvas. The shader
+   remaps only the base scene; house and boat layers keep their alignment.
 
    The original `day` is public/canal.webp
    rather than a file in layover/: the page already loads it as the CSS
@@ -43,7 +43,7 @@ import {sceneTexture} from './scene-texture.js';
    of a second copy of the same picture. The rest come from
    tools/build_layover.py.
 
-   `band` fills any horizontal surround outside the painting at that stop —
+   `band` colours the page surround and browser overscroll at that stop —
    the mean of that painting's own brightest five per cent, which for a
    watercolour is its paper. Day's is the page's own --shell, which is where
    that measurement came from in the first place. The two night stops break
@@ -188,7 +188,6 @@ function boot() {
     if (!gl) return;   // no canvas, no tail — the page stays exactly as it is
 
     const n = v => v.toFixed(5);   // GLSL has no integer-to-float coercion
-    const rgb = c => `vec3(${c.map(v => n(v / 255)).join(', ')})`;
 
     /* Five scenes, the two things the night adds and both variants of all
        four houses is fifteen samplers, and WebGL 1 only promises eight.
@@ -253,21 +252,16 @@ function boot() {
         /* The scene at hour t: two texture reads while the ramp is between
            stops, one while it is sitting on either end. */
         vec3 scene(vec2 c, float t){
-            /* Extra-tall screens may exceed even the extended artwork. Fit
-               only the new sky/water to that space; never stretch houses. */
+            /* Fit only the new margins on extreme aspect ratios. The central
+               houses and their reflections never stretch or crop to fill. */
+            if (c.x < 0.0) c.x /= max(1.0, -origin.x / .8);
+            else if (c.x > 1.0) c.x = 1.0 + (c.x - 1.0) / max(1.0, (frame.x + origin.x - 1.0) / .8);
             if (c.y < 0.0) c.y /= max(1.0, -origin.y);
             else if (c.y > 1.0) c.y = 1.0 + (c.y - 1.0) / max(1.0, frame.y + origin.y - 1.0);
-            c.y = (c.y + 1.0) / 3.0;
+            c = (c + 1.0) / 3.0;
             if (t <= 0.0) return texture2D(${SCENE[0].key}, c).rgb;
             ${ramp(s => `texture2D(${s.key}, c).rgb`)}
             return texture2D(${SCENE[LAST].key}, c).rgb;
-        }
-
-        /* What fills the screen beside the painting, on the same
-           ramp — so the frame turns over with the picture in it. */
-        vec3 band(float t){
-            ${ramp(s => rgb(s.band))}
-            return ${rgb(SCENE[LAST].band)};
         }
 
         void main(){
@@ -285,13 +279,6 @@ function boot() {
                sky and the lit boat sit still while the windows go out. */
             float dark = clamp(t - ${n(DUSK - 1)}, 0.0, 1.0);
 
-            /* Above/below the original scene is painted sky and canal now.
-               Only the horizontal surround lies outside the artwork. */
-            if (c.x < 0.0 || c.x > 1.0) {
-                gl_FragColor = vec4(band(t), 1.0);
-                return;
-            }
-
             float d = (c.y - ${n(WATERLINE)}) / ${n(1 - WATERLINE)};
             if (d > 0.0 && gain > 0.0) {
                 d = clamp(d, 0.0, 1.0);
@@ -304,9 +291,9 @@ function boot() {
                 c.y += amp * sin(c.x * f * 52.0 - w * 1.60) * 0.30;
                 c.y = max(c.y, ${n(WATERLINE)} + 0.0005);   // never pull the quay down
             }
-            c.x = clamp(c.x, 0.0, 1.0);
-            bool originalFrame = c.y >= 0.0 && c.y <= 1.0;
-            float sceneEdge = smoothstep(0.0, 0.07, c.y) * (1.0 - smoothstep(0.92, 1.0, c.y));
+            bool originalFrame = c.x >= 0.0 && c.x <= 1.0 && c.y >= 0.0 && c.y <= 1.0;
+            float sceneEdge = smoothstep(0.0, 0.07, c.y) * (1.0 - smoothstep(0.92, 1.0, c.y))
+                * smoothstep(0.0, 0.08, c.x) * (1.0 - smoothstep(0.92, 1.0, c.x));
 
             vec3 col = scene(c, t);
 
@@ -417,9 +404,8 @@ ${HOUSES.map((h, i) => house(h, 'xyzw'[i])).join('\n')}
            otherwise done. Opening a house also requests it immediately.
 
            Nothing further along the ramp is in this list. The rest of the
-           scenes come to about 750 KB between them and a visitor who never
-           scrolls never sees one; `askHour` fetches each as the crossfade
-           that ends on it begins. */
+           scenes are only needed when the visitor scrolls; `askHour` fetches each as the crossfade
+       that ends on it begins. The panoramic margins load with their scene. */
         const idle = window.requestIdleCallback || (f => setTimeout(f, 1200));
         idle(() => HOUSES.forEach(h => load(h.resident)));
     });
@@ -444,10 +430,14 @@ function load(layer) {
     layer.pending = Promise.all([
         readImage(layer.src),
         layer.extension ? readImage(layer.extension) : null,
-    ]).then(([original, extension]) => {
+        layer.extension ? readImage(`panorama/${layer.key}.webp`) : null,
+    ]).then(([original, extension, panorama]) => {
         if (!original) { start(); return false; }
         layer.img = layer.extension
-            ? sceneTexture(original, extension, gl?.getParameter(gl.MAX_TEXTURE_SIZE) || 4096)
+            ? sceneTexture(original, extension, panorama, Math.min(
+                gl?.getParameter(gl.MAX_TEXTURE_SIZE) || 4096,
+                Math.ceil(roster.getBoundingClientRect().width * 3 * Math.min(devicePixelRatio || 1, 1.5))
+            ))
             : original;
         upload(layer);
         start();
