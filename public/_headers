@@ -12,7 +12,7 @@
 
 # The link-preview card. Same short window: scrapers cache it hard on their own
 # side, so a redraw should at least not be stuck behind our cache too.
-/og.jpg
+/og-canal.jpg
   Cache-Control: public, max-age=3600, stale-while-revalidate=604800
 
 /*
